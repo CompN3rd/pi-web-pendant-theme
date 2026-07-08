@@ -394,6 +394,30 @@ img {
 .msg > .msg-header {
   border-bottom-color: transparent !important;
 }
+
+/* Scrollbars — thin, dark, flush with the panel edge (no border-radius).
+   Webkit: 8px track + thumb. Firefox: thin + custom colors. */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--pi-border);
+  border-radius: 0;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--pi-dim);
+}
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--pi-border) transparent;
+}
 `;
 
 // --- Style injection machinery ----------------------------------------------
