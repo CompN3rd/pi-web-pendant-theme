@@ -62,6 +62,9 @@ const preCases = [
   ['excluded from context\n\n$ uv sync\n\nResolved', 'uv sync'],
   ['$ pdm install', 'pdm install'],
   ['no command here', ''],
+  // Blank command line (e.g. an empty bash call): `$ ` then newline — must NOT
+  // eat across the blank line into the output and treat it as the command.
+  ['$ \n\noutput', ''],
   ['', ''],
 ];
 for (const [input, want] of preCases) {

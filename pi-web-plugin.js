@@ -474,19 +474,22 @@ function loadManifest() {
   return manifestPromise;
 }
 
-
-
 function activeThemeId() {
   const v = document.documentElement.getAttribute(THEME_ATTR) ?? "";
   return v.startsWith(`${PLUGIN_ID}:`) ? v.slice(PLUGIN_ID.length + 1) : null;
 }
 
-function isMonochromeTheme(id) {
-  return id !== "dark" && id !== "light";
+// Only the canonical Pendant Dark/Light themes render logos in full brand
+// color; every experiment theme (Amber, Green, Cyan, Mono, Muted) desaturates
+// logos to --pi-text-secondary so they stay on-palette. The "auto" pair
+// resolves to dark or light (both brand-color), so treat it as brand-color too
+// — this is correct whether PI WEB stores the resolved id or the pair id.
+function usesDesaturatedLogos(themeId) {
+  return themeId !== "dark" && themeId !== "light" && themeId !== "auto";
 }
 
 function logoColorFor(slug, themeId) {
-  if (slug.startsWith("symbol:") || isMonochromeTheme(themeId)) {
+  if (slug.startsWith("symbol:") || usesDesaturatedLogos(themeId)) {
     return "var(--pi-text-secondary)";
   }
   const b = manifest?.brands?.[slug];
@@ -523,7 +526,6 @@ function restoreLabel(label) {
 }
 
 function processBashBox(el, themeId) {
-  if (!manifest) return;
   const header = el.querySelector(".msg-header");
   if (!header) return;
   const pre = el.querySelector(".part.shell-output");
@@ -614,37 +616,13 @@ function observeRoot(root) {
   sweepRoot(root);
 }
 
-function observeExistingShadowRoots(root) {
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
-  for (let node = root; node !== null; node = walker.nextNode()) {
-    if (node instanceof Element && node.shadowRoot !== null) {
-      observeRoot(node.shadowRoot);
-      observeExistingShadowRoots(node.shadowRoot);
-    }
-  }
-}
-
-let logosInstalled = false;
-function installCommandLogos() {
-  if (logosInstalled) return;
-  logosInstalled = true;
-  loadManifest();
-  observeRoot(document);
-  observeExistingShadowRoots(document.documentElement);
-}
-
 // --- Style injection machinery ----------------------------------------------
 
 const pixelSheet = new CSSStyleSheet();
 pixelSheet.replaceSync(pixelCss);
 
-function isPendantThemeActive() {
-  const value = document.documentElement.getAttribute(THEME_ATTR) ?? "";
-  return value.startsWith(`${PLUGIN_ID}:`);
-}
-
 function syncPixelSheet() {
-  pixelSheet.disabled = !isPendantThemeActive();
+  pixelSheet.disabled = activeThemeId() === null;
 }
 
 function adoptInto(shadowRoot) {
@@ -724,10 +702,14 @@ function installPixelLayer() {
   };
 
   // Cover shadow roots that already exist (plugins load after first render).
+  // adoptInto() also calls observeRoot(), so every existing shadow root is
+  // observed for command-logo injection here.
   adoptIntoExistingShadowRoots(document.documentElement);
 
-  // Command logos: observe all roots for `.msg.bash` boxes and inject logos.
-  installCommandLogos();
+  // Command logos: load the slug→icon manifest and observe the document for
+  // .msg.bash boxes. Shadow roots were observed just above via adoptInto().
+  loadManifest();
+  observeRoot(document);
 
   // Enable/disable the structural layer as the active theme changes, and
   // sweep command logos so they appear/disappear with the theme toggle.
