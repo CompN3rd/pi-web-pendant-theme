@@ -5,11 +5,13 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "test": "node test-parse-command.js"
+    "test": "node test-parse-command.js",
+    "verify:parser": "node scripts/verify-parser-sync.mjs"
   },
   "files": [
     "pi-web-plugin.js",
     "lib",
+    "scripts/verify-parser-sync.mjs",
     "fonts",
     "logos"
   ],

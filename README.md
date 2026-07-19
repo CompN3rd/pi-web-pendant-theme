@@ -4,19 +4,20 @@ A [Pendant](https://pendant.run/)-inspired theme pack for [PI WEB](https://pi-we
 
 ## Command logos
 
-When a Pendant theme is active, shell-command boxes (`.msg.bash`) get an
-unobtrusive brand logo in their header, matching the first token of the
-command to a [Simple Icons](https://simpleicons.org/) slug — the same idea
-as the Pendant VS Code extension.
+When a Pendant theme is active, bash tool cards (`tool-execution-view` →
+`section.tool-card`) get an unobtrusive brand logo in their title, matching
+the first token of the command to a [Simple Icons](https://simpleicons.org/)
+slug — the same idea as the Pendant VS Code extension.
 
-- **236 commands** mapped across git, shells, every major language/runtime,
+- **247 commands** mapped across git, shells, every major language/runtime,
   package managers, build tools, test runners, linters, bundlers,
   containers, Kubernetes, IaC, clouds, databases, and observability tools.
 - **124 brand icons** (Simple Icons, CC0) + **13 hand-crafted generic glyphs**
   (`symbol:search`, `symbol:cloud`, `symbol:hammer`, `symbol:terminal`, …)
   for commands with no brand mark.
-- The `bash` header label is replaced with the tool's name (`Git`, `uv`,
-  `PDM`, `Python`, `PyPI`, `Rust`, `Docker`, …); generic glyphs keep `bash`.
+- The `bash` tool title is visually replaced with the tool's name (`Git`,
+  `uv`, `PDM`, `Python`, `PyPI`, `Rust`, `Docker`, …); generic glyphs keep
+  `bash`.
 - `cd <dir> && <cmd>` / `cd <dir>; <cmd>` prefixes are stripped, so
   `cd ~/repo && git push` shows the Git logo.
 - **Pendant Dark** and **Pendant Light** use each brand's official hex;
@@ -24,7 +25,7 @@ as the Pendant VS Code extension.
   Monochrome, Muted Everything) desaturate logos to `--pi-text-secondary`
   so they stay on-palette.
 - Fully gated behind the Pendant theme toggle: switching to a stock theme
-  strips every logo and restores the `bash` label.
+  strips every logo and restores the original `bash` title.
 
 The mapping + icon path data live in [`logos/manifest.json`](./logos/manifest.json)
 (`commandToSlug`, `brands`, `symbols`). Brand icons are CC0 (Simple Icons);

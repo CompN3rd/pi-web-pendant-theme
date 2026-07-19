@@ -9,7 +9,71 @@
 // The structural stylesheet is only active while one of the Pendant themes is
 // selected; switching back to a stock theme fully restores the normal look.
 
-import { firstCommandToken, extractCommand } from "./lib/parse-command.js";
+// --- Inline command parser (extracted from lib/parse-command.js) ------------
+// Kept in-sync with the test-only library copy; duplicated here so the plugin
+// has zero runtime imports (no secondary file to serve/resolve).
+
+function skipWhitespace(s, i) {
+  while (i < s.length && /\s/.test(s[i])) i++;
+  return i;
+}
+function skipHorizontalWhitespace(s, i) {
+  while (i < s.length && /[ \t]/.test(s[i])) i++;
+  return i;
+}
+function separatorLength(s, i) {
+  if (s.slice(i, i + 2) === "&&") return 2;
+  if (s[i] === ";" || s[i] === "\n" || s[i] === "|") return 1;
+  if (s[i] === "\r") return s[i + 1] === "\n" ? 2 : 1;
+  return 0;
+}
+function readShellWord(s, i) {
+  const start = i;
+  while (i < s.length && !/[\s&;|]/.test(s[i])) {
+    if (s[i] === "\\") { i += i + 1 < s.length ? 2 : 1; }
+    else if (s[i] === "\"" || s[i] === "'") {
+      const quote = s[i++];
+      while (i < s.length && s[i] !== quote) { i += s[i] === "\\" && i + 1 < s.length ? 2 : 1; }
+      if (i < s.length) i++;
+    } else { i++; }
+  }
+  return { word: s.slice(start, i), end: i };
+}
+function skipOneCdPrefix(s, i) {
+  const start = i;
+  const command = readShellWord(s, i);
+  if (command.word.toLowerCase() !== "cd") return start;
+  i = skipWhitespace(s, command.end);
+  while (s[i] === "-") { i = skipWhitespace(s, readShellWord(s, i).end); }
+  if (separatorLength(s, i) === 0 && i < s.length) { i = readShellWord(s, i).end; }
+  i = skipHorizontalWhitespace(s, i);
+  const sepLen = separatorLength(s, i);
+  return sepLen === 0 ? start : skipWhitespace(s, i + sepLen);
+}
+function isAssignmentWord(word) {
+  return /^[A-Za-z_][A-Za-z0-9_]*=/.test(word);
+}
+function skipLeadingAssignments(s, i) {
+  while (i < s.length) {
+    const { word, end } = readShellWord(s, i);
+    if (!word || !isAssignmentWord(word)) return i;
+    i = skipHorizontalWhitespace(s, end);
+    const sepLen = separatorLength(s, i);
+    if (sepLen > 0) i = skipWhitespace(s, i + sepLen);
+    else i = skipWhitespace(s, i);
+  }
+  return i;
+}
+function firstCommandToken(s) {
+  if (!s) return "";
+  let i = skipWhitespace(s, 0);
+  i = skipLeadingAssignments(s, i);
+  i = skipOneCdPrefix(s, i);
+  i = skipLeadingAssignments(s, i);
+  return readShellWord(s, i).word;
+}
+
+// ----------------------------------------------------------------------------
 
 const PLUGIN_ID = "pendant";
 const THEME_ATTR = "data-pi-web-theme";
@@ -398,25 +462,25 @@ img {
   border-bottom-color: transparent !important;
 }
 
-/* Command logos injected into .msg.bash headers (Pendant-style). */
-.msg-header .label {
-  display: inline-flex !important;
-  align-items: center;
-  gap: 6px;
-}
+/* Command logos injected into bash tool-card titles (Pendant-style). */
 .pendant-cmd-logo {
   display: inline-flex;
-  align-items: center;
-  justify-content: center;
   width: 14px;
   height: 14px;
-  flex: 0 0 auto;
+  margin-right: 6px;
+  vertical-align: middle;
 }
 .pendant-cmd-logo svg {
   width: 100%;
   height: 100%;
   display: block;
   /* color is set inline per-icon (brand hex, or a --pi-* token for symbols / mono themes) */
+}
+.pendant-cmd-name {
+  font-weight: 600;
+}
+.pendant-cmd-hidden {
+  display: none !important;
 }
 
 /* Scrollbars — thin, dark, flush with the panel edge (no border-radius).
@@ -445,24 +509,39 @@ img {
 `;
 
 // --- Command logos ----------------------------------------------------------
-// When a Pendant theme is active, inject a brand logo into the header of each
-// `.msg.bash` shell-output box: the first token of the command is matched to a
-// Simple Icons slug (manifest: logos/manifest.json). Fully gated behind the
-// theme toggle — logos are injected only while a Pendant theme is active and
-// are stripped (and the `bash` label restored) when the user switches away.
+// When a Pendant theme is active, decorate bash tool cards with a brand logo.
+// PI WEB renders every tool call as a <tool-execution-view> whose shadow root
+// contains:
+//
+//   section.tool-card > div.tool-header > div.tool-title >
+//     span.status-icon + <strong>bash</strong> + span.summary (command)
+//
+// plus a Details block holding the full command (div.detail-target > pre).
+// The first command token (after one `cd <dir> &&` prefix) is matched to a
+// Simple Icons slug via logos/manifest.json. Brand matches hide the "bash"
+// <strong> (CSS class only — Lit-managed text is never mutated, since Lit
+// keeps part markers inside it) and insert logo + brand name as sibling
+// nodes; symbol matches insert just a glyph. Fully gated behind the theme
+// toggle: switching away strips everything and unhides the tool name.
 
 const LOGO_CLASS = "pendant-cmd-logo";
+const NAME_CLASS = "pendant-cmd-name";
+const HIDDEN_CLASS = "pendant-cmd-hidden";
 
 let manifestPromise = null;
 let manifest = null;       // { commandToSlug, brands, symbols }
-let observedRoots = new Set();
+const observedRoots = new Set();
 let logoSweepScheduled = false;
 let manifestFailed = false;
 
 function loadManifest() {
   if (manifestFailed) return Promise.resolve(null);
   if (manifestPromise) return manifestPromise;
-  manifestPromise = fetch(MANIFEST_URL, { cache: "force-cache" })
+  // Default HTTP caching (NOT force-cache): force-cache would pin the first
+  // cached copy forever, so manifest updates shipped in new package versions
+  // would never reach returning users. Per-page-load memoization is already
+  // handled by manifestPromise above.
+  manifestPromise = fetch(MANIFEST_URL)
     .then((r) => { if (!r.ok) throw new Error(`manifest HTTP ${r.status}`); return r.json(); })
     .then((m) => { manifest = m; return m; })
     .catch((e) => {
@@ -508,6 +587,8 @@ function buildLogoSvg(slug, themeId) {
     : manifest?.brands?.[slug]?.path;
   if (!path) return null;
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  // All Simple Icons paths are pre-normalized to a 24x24 box (larger dimension
+  // spans 24, centered), so a fixed viewBox renders every icon as intended.
   svg.setAttribute("viewBox", "0 0 24 24");
   svg.setAttribute("aria-hidden", "true");
   svg.style.color = logoColorFor(slug, themeId);
@@ -518,56 +599,61 @@ function buildLogoSvg(slug, themeId) {
   return svg;
 }
 
-function restoreLabel(label) {
-  if (label?.dataset.pendantOriginal !== undefined) {
-    label.textContent = label.dataset.pendantOriginal;
-    delete label.dataset.pendantOriginal;
-  }
+// Full command from the card's Details block; while the call is still
+// streaming only the (possibly truncated) title summary exists.
+function commandOfCard(card) {
+  const pre = card.querySelector(".detail-target pre");
+  if (pre?.textContent) return pre.textContent;
+  return card.querySelector(".tool-title .summary")?.textContent ?? "";
 }
 
-function processBashBox(el, themeId) {
-  const header = el.querySelector(".msg-header");
-  if (!header) return;
-  const pre = el.querySelector(".part.shell-output");
-  const cmd = extractCommand(pre?.textContent ?? "");
-  const token = firstCommandToken(cmd);
-  const existing = header.querySelector(`.${LOGO_CLASS}`);
-  if (existing && existing.dataset.cmd === cmd && existing.dataset.token === token && existing.dataset.theme === themeId) return;
+function restoreToolCard(title, strong) {
+  for (const el of title.querySelectorAll(`.${LOGO_CLASS}, .${NAME_CLASS}`)) el.remove();
+  strong.classList.remove(HIDDEN_CLASS);
+}
 
-  const slug = (token && manifest.commandToSlug?.[token]) || null;
-  const label = header.querySelector(".label");
-  if (existing) existing.remove();
-  if (!slug) {
-    restoreLabel(label);
+function processToolCard(card, themeId) {
+  const title = card.querySelector(".tool-header .tool-title");
+  const strong = title?.querySelector("strong");
+  if (!strong) return;
+  const existing = title.querySelector(`.${LOGO_CLASS}`);
+  // strong's text is never mutated, so it always holds the real tool name —
+  // including after Lit recycles this card for a different tool.
+  if (strong.textContent.trim().toLowerCase() !== "bash") {
+    if (existing) restoreToolCard(title, strong);
     return;
   }
+  const cmd = commandOfCard(card);
+  if (existing && existing.dataset.cmd === cmd && existing.dataset.theme === themeId) return;
+
+  const token = firstCommandToken(cmd);
+  const slug = (token && manifest.commandToSlug?.[token]) || null;
+  if (existing || !slug) restoreToolCard(title, strong);
+  if (!slug) return;
   const svg = buildLogoSvg(slug, themeId);
   if (!svg) return;
   const wrap = document.createElement("span");
   wrap.className = LOGO_CLASS;
   wrap.dataset.cmd = cmd;
-  wrap.dataset.token = token;
   wrap.dataset.slug = slug;
   wrap.dataset.theme = themeId;
   wrap.appendChild(svg);
-  if (label) {
-    const pretty = labelFor(slug);
-    if (pretty) {
-      label.dataset.pendantOriginal = label.dataset.pendantOriginal ?? label.textContent;
-      label.textContent = "";
-      label.appendChild(wrap);
-      label.appendChild(document.createTextNode(pretty));
-    } else {
-      label.insertBefore(wrap, label.firstChild);
-    }
+  const pretty = labelFor(slug);
+  if (pretty) {
+    const name = document.createElement("span");
+    name.className = NAME_CLASS;
+    name.textContent = pretty;
+    strong.classList.add(HIDDEN_CLASS);
+    strong.before(wrap, name);
   } else {
-    header.insertBefore(wrap, header.firstChild);
+    // Symbol glyphs keep the "bash" tool name visible.
+    strong.before(wrap);
   }
 }
 
 function stripRoot(root) {
-  for (const w of root.querySelectorAll(`.${LOGO_CLASS}`)) w.remove();
-  for (const lab of root.querySelectorAll(".label")) restoreLabel(lab);
+  for (const el of root.querySelectorAll(`.${LOGO_CLASS}, .${NAME_CLASS}`)) el.remove();
+  for (const el of root.querySelectorAll(`.${HIDDEN_CLASS}`)) el.classList.remove(HIDDEN_CLASS);
 }
 
 function sweepRoot(root) {
@@ -586,7 +672,7 @@ function sweepRoot(root) {
     }
     return;
   }
-  for (const el of root.querySelectorAll(".msg.bash")) processBashBox(el, themeId);
+  for (const card of root.querySelectorAll("section.tool-card")) processToolCard(card, themeId);
 }
 
 function scheduleSweep() {
@@ -706,8 +792,8 @@ function installPixelLayer() {
   // observed for command-logo injection here.
   adoptIntoExistingShadowRoots(document.documentElement);
 
-  // Command logos: load the slug→icon manifest and observe the document for
-  // .msg.bash boxes. Shadow roots were observed just above via adoptInto().
+  // Command logos: load the slug→icon manifest and observe the document.
+  // Tool-card shadow roots were observed just above via adoptInto().
   loadManifest();
   observeRoot(document);
 

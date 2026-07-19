@@ -2,7 +2,7 @@
 // theme plugin uses in the browser — no copy-paste drift.
 // Run: node test-parse-command.js
 import assert from 'node:assert/strict';
-import { firstCommandToken, extractCommand } from './lib/parse-command.js';
+import { firstCommandToken } from './lib/parse-command.js';
 
 // --- tests ------------------------------------------------------------------
 const cases = [
@@ -30,6 +30,13 @@ const cases = [
   ['  cd ~/repo', 'cd'],        // leading whitespace + cd + no separator
   ['  cd', 'cd'],               // leading whitespace + bare cd
   ['  cd ~/repo && git status', 'git'], // leading whitespace + cd + separator
+  ['FOO=bar npm test', 'npm'],
+  ['FOO="bar baz" node script.mjs', 'node'],
+  ['FOO=bar && git status', 'git'],
+  ['cd ~/repo && FOO=bar npm test', 'npm'],
+  ['FOO=bar cd ~/repo && npm test', 'npm'],
+  ['PI="C:/path" && cp a b', 'cp'],
+  ['FOO=bar', ''],
   ['cargo build --release', 'cargo'],
   ['docker compose up -d', 'docker'],
   ['docker-compose up', 'docker-compose'],
@@ -53,27 +60,6 @@ for (const [input, want] of cases) {
   } catch (e) {
     fail++;
     console.error(`FAIL: ${JSON.stringify(input)} -> got ${JSON.stringify(firstCommandToken(input))}, want ${JSON.stringify(want)}`);
-  }
-}
-
-// extractCommand tests
-const preCases = [
-  ['$ git status\n\nOn branch main...', 'git status'],
-  ['excluded from context\n\n$ uv sync\n\nResolved', 'uv sync'],
-  ['$ pdm install', 'pdm install'],
-  ['no command here', ''],
-  // Blank command line (e.g. an empty bash call): `$ ` then newline — must NOT
-  // eat across the blank line into the output and treat it as the command.
-  ['$ \n\noutput', ''],
-  ['', ''],
-];
-for (const [input, want] of preCases) {
-  try {
-    assert.equal(extractCommand(input), want);
-    pass++;
-  } catch (e) {
-    fail++;
-    console.error(`FAIL extract: ${JSON.stringify(input)} -> got ${JSON.stringify(extractCommand(input))}, want ${JSON.stringify(want)}`);
   }
 }
 

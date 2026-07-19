@@ -25,66 +25,77 @@ There is **no** `messageRender` / `partRender` / `toolCallRender` hook.
 Lit tags are passed in, but with no contribution point to slot a template
 into the message stream, they don't help here.)
 
-### 0.2 Bash command-box DOM (verified from `renderPart`/`renderMessageHeader`)
+### 0.2 Bash tool-card DOM (verified against production localhost:8504)
 
-A bash execution renders, inside the chat component's **shadow root**, as:
+A bash execution renders inside a `<tool-execution-view>` custom element.
+That custom element has its own **shadow root** containing:
 
 ```html
-<div class="msg bash">                     <!-- the box; success-colored border/bg -->
-  <div class="msg-header">                  <!-- sticky header (top: -26px, z-index:4) -->
-    <b class="label">bash</b>               <!-- role label -->
-    <div class="msg-header-trailing">…actions…<span class="msg-meta">…</span></div>
+<section class="tool-card success">
+  <div class="tool-header">
+    <div class="tool-title">
+      <span class="status-icon">✓</span>
+      <strong>bash</strong>
+      <span class="summary">cd "C:/repo" && git status</span>
+    </div>
+    <div class="tool-meta">…</div>
   </div>
-  <pre class="part shell-output">$ git status\n\n<output text…></pre>
-</div>
+  <details class="text-body">
+    <div class="detail-target">
+      <span class="detail-label">Command</span>
+      <pre>cd "C:/repo" && git status</pre>
+    </div>
+    …
+  </details>
+</section>
 ```
 
-Key facts (from the data model + `renderPart`):
-- `renderPart`: `e.type==='text' && t?.role==='bash'` →
-  `<pre class="part shell-output">${e.text}</pre>`.
-- The `pre`'s text is built as `$ ${command}` then `\n\n` then output
-  (`function vo(e,t){…Pa('bash', `${…}$ ${e}`)…}`).
-- Variant: when excluded-from-context, text becomes
-  `excluded from context\n\n$ ${command}` — so the command line is **not
-  always line 0**. Robust extraction: split on `\n`, find the first line
-  matching `/^\$\s+(.*)/`, take group 1 as the command string.
-- The `.msg-header` is **sticky** — a logo injected there stays visible
-  while scrolling through long output. Ideal Pendant-style placement.
-- CSS classes are **stable literals** (`.msg`, `.msg.bash`, `.msg-header`,
-`.part.shell-output`, `.label`), not Lit-hashed. Safe to key off.
+Key facts:
+- In the production PI WEB DOM, tool calls render as
+  `<tool-execution-view>` custom elements. Each one has a shadow root with
+  `section.tool-card > .tool-header > .tool-title`.
+- Bash executions are identified by `.tool-title strong` containing `bash`.
+- The complete command is available in the Details block:
+  `.detail-target pre` under the `Command` detail. While a tool is still
+  streaming, only `.tool-title .summary` may exist; it is a fallback only.
+- The title's `<strong>` text is Lit-managed. Do **not** mutate it with
+  `textContent = ...`; hide it with a CSS class and insert logo/name sibling
+  nodes instead.
+- Stable production selectors: `section.tool-card`, `.tool-title`,
+  `.tool-title strong`, `.tool-title .summary`, `.detail-target pre`.
 
 ### 0.3 Re-render survivability
 
-Lit re-runs `renderPart` / `renderMessageHeader` on stream updates and
-replaces the `.msg-header` and `<pre>` nodes. So an injected logo gets
-wiped on each re-render. Design implication: the observer must re-process
-idempotently on every mutation (don't trust a `data-pendant-logoed` flag
-across re-renders; re-check and re-inject). Tag the **command string** we
-matched (e.g. `data-pendant-cmd="git status"`) so we can skip work when
-nothing changed, but always verify the logo node is still present.
+Lit may re-render tool cards as running executions complete and event groups
+expand/collapse. Injected logo nodes can be wiped or cards can be reused.
+Design implication: the observer must re-process idempotently on every
+mutation. Tag the **command string** and active theme on the injected logo so
+we can skip work when nothing changed, but never mutate Lit-managed text.
 
 ### 0.4 Shadow-root reachability — already solved by this plugin
 
-The chat `.msg.bash` nodes live in a Lit shadow root. The existing plugin
-already wraps `Element.prototype.attachShadow` and walks all existing
-shadow roots (`adoptIntoExistingShadowRoots`), so we have a hook point to
-install a per-shadow-root `MutationObserver` watching for `.msg.bash`
-nodes being added/changed. No new discovery machinery needed.
+The `tool-execution-view` cards live in Lit shadow roots. The existing plugin
+already wraps `Element.prototype.attachShadow` and walks all existing shadow
+roots (`adoptIntoExistingShadowRoots`), so the same machinery can install a
+per-shadow-root `MutationObserver` that watches for `section.tool-card` nodes
+being added/changed. No new discovery machinery needed.
 
 ### 0.5 Confirmed selectors & extraction algorithm
 
 ```
 for each shadow root (and document):
-  for each el matching '.msg.bash':
-    pre  = el.querySelector('.part.shell-output')
-    text = pre?.textContent ?? ''
-    cmd  = first line of text matching /^\$\s+(.*)/  →  group(1)
-    if !cmd: skip (not a command box, e.g. pure output)
-    token = first whitespace-delimited token of cmd   (Pendant's rule)
+  for each card matching 'section.tool-card':
+    title  = card.querySelector('.tool-header .tool-title')
+    strong = title?.querySelector('strong')
+    if strong?.textContent.trim().toLowerCase() !== 'bash': restore/skip
+    cmd   = card.querySelector('.detail-target pre')?.textContent
+            ?? title.querySelector('.summary')?.textContent
+            ?? ''
+    token = firstCommandToken(cmd)  // strips one leading cd <dir> && prefix
     slug  = commandToSlug[token]
-    header = el.querySelector('.msg-header')
     inject <span class="pendant-cmd-logo" data-slug=slug>…svg…</span>
-      as header's first child (before <b class="label">)
+      before <strong>; for brand logos, also hide <strong> and insert the
+      brand display name as a sibling span.
 ```
 
 ---
@@ -287,22 +298,18 @@ names, and key the logo off the first token of that text.
 ---
 
 ## 4. Open questions — resolved by the spike
-* ✅ **Verbatim command string?** Yes — `<pre class="part shell-output">`
-  text starts with `$ <command>` verbatim (only `\n`-joining, no
-  escaping). First-token matching works.
+* ✅ **Verbatim command string?** Yes — bash cards expose the full command in
+  the `Command` detail (`.detail-target pre`). First-token matching works.
 * ✅ **Light DOM or shadow root?** Shadow root (Lit). The plugin's existing
   `attachShadow` wrap + shadow-root walk already cover it.
-* ✅ **Stable selectors?** Yes — class literals `.msg.bash`, `.msg-header`,
-  `.part.shell-output`, `.label` are not hashed. No `data-*` attrs exist,
-  but class-based selection is safe here.
-* ⚠️ **Still open (design decision, not blocking):** should logos appear for
-  *every* `.msg.bash`, or only for ones whose first token maps to a known
-  brand? Recommendation: inject only on known-brand match (cleaner, avoids
-  noise on `cat`/`echo`/arbitrary commands); unknown commands simply get
-  no logo. The `symbol:*` generic fallbacks from Pendant are optional in a
-  theme plugin and can be skipped to keep the look clean.
-* ⚠️ **Streaming re-render:** Lit replaces `.msg-header` on updates, wiping
-  the logo. Mitigation already designed in §0.3 — re-inject idempotently.
+* ✅ **Stable selectors?** Yes — production tool cards expose stable literal
+  classes (`section.tool-card`, `.tool-title`, `.detail-target`).
+* ✅ **Known-brand only?** No — use the full manifest including `symbol:*`
+  generic fallbacks, so common unbranded commands still get quiet glyphs while
+  unknown commands simply keep the standard bash title.
+* ✅ **Streaming re-render:** handled by idempotent MutationObserver sweeps;
+  the plugin inserts sibling nodes and hides Lit-managed `<strong>` text rather
+  than mutating that text directly.
 
 ---
 

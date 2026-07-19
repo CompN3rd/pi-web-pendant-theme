@@ -35,12 +35,16 @@ const commandToSlug = {
   grep: 'symbol:search', rg: 'symbol:search', ag: 'symbol:search',
   ack: 'symbol:search', find: 'symbol:search', fd: 'symbol:search',
   which: 'symbol:search', semgrep: 'symbol:search',
-  // listing / text utils
+  // listing / text / file / network utils
   ls: 'symbol:terminal', tree: 'symbol:terminal', cat: 'symbol:file',
   head: 'symbol:file', tail: 'symbol:listEnd', wc: 'symbol:hash',
   sed: 'symbol:file', awk: 'symbol:file', sort: 'symbol:arrowDownUp',
   cut: 'symbol:file', diff: 'symbol:fileCode', cmp: 'symbol:gitCompare',
   comm: 'symbol:gitCompare', date: 'symbol:hash', file: 'symbol:file',
+  cp: 'symbol:file', mv: 'symbol:file', rm: 'symbol:file',
+  mkdir: 'symbol:file', rmdir: 'symbol:file', touch: 'symbol:file',
+  echo: 'symbol:terminal', tee: 'symbol:file', xargs: 'symbol:terminal',
+  curl: 'symbol:cloud', wget: 'symbol:cloud',
   // shells
   sh: 'symbol:terminal', bash: 'gnubash', zsh: 'zsh', fish: 'fishshell',
   pwsh: 'symbol:terminal', powershell: 'symbol:terminal',
