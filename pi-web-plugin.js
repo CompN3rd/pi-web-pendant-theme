@@ -9,9 +9,12 @@
 // The structural stylesheet is only active while one of the Pendant themes is
 // selected; switching back to a stock theme fully restores the normal look.
 
+import { firstCommandToken, extractCommand } from "./lib/parse-command.js";
+
 const PLUGIN_ID = "pendant";
 const THEME_ATTR = "data-pi-web-theme";
 const FONT_BASE = `/pi-web-plugins/${PLUGIN_ID}/fonts`;
+const MANIFEST_URL = `/pi-web-plugins/${PLUGIN_ID}/logos/manifest.json`;
 
 // --- Color tokens -----------------------------------------------------------
 // Pendant dark palette: #111 bg, #171717 surface, #4f8cff accent, #47d18c green.
@@ -395,6 +398,27 @@ img {
   border-bottom-color: transparent !important;
 }
 
+/* Command logos injected into .msg.bash headers (Pendant-style). */
+.msg-header .label {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 6px;
+}
+.pendant-cmd-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+}
+.pendant-cmd-logo svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  /* color is set inline per-icon (brand hex, or a --pi-* token for symbols / mono themes) */
+}
+
 /* Scrollbars — thin, dark, flush with the panel edge (no border-radius).
    Webkit: 8px track + thumb. Firefox: thin + custom colors. */
 *::-webkit-scrollbar {
@@ -420,6 +444,195 @@ img {
 }
 `;
 
+// --- Command logos ----------------------------------------------------------
+// When a Pendant theme is active, inject a brand logo into the header of each
+// `.msg.bash` shell-output box: the first token of the command is matched to a
+// Simple Icons slug (manifest: logos/manifest.json). Fully gated behind the
+// theme toggle — logos are injected only while a Pendant theme is active and
+// are stripped (and the `bash` label restored) when the user switches away.
+
+const LOGO_CLASS = "pendant-cmd-logo";
+
+let manifestPromise = null;
+let manifest = null;       // { commandToSlug, brands, symbols }
+let observedRoots = new Set();
+let logoSweepScheduled = false;
+let manifestFailed = false;
+
+function loadManifest() {
+  if (manifestFailed) return Promise.resolve(null);
+  if (manifestPromise) return manifestPromise;
+  manifestPromise = fetch(MANIFEST_URL, { cache: "force-cache" })
+    .then((r) => { if (!r.ok) throw new Error(`manifest HTTP ${r.status}`); return r.json(); })
+    .then((m) => { manifest = m; return m; })
+    .catch((e) => {
+      console.warn(`[pendant] command-logo manifest failed: ${e.message}`);
+      manifestPromise = null;
+      manifestFailed = true;
+      return null;
+    });
+  return manifestPromise;
+}
+
+
+
+function activeThemeId() {
+  const v = document.documentElement.getAttribute(THEME_ATTR) ?? "";
+  return v.startsWith(`${PLUGIN_ID}:`) ? v.slice(PLUGIN_ID.length + 1) : null;
+}
+
+function isMonochromeTheme(id) {
+  return id !== "dark" && id !== "light";
+}
+
+function logoColorFor(slug, themeId) {
+  if (slug.startsWith("symbol:") || isMonochromeTheme(themeId)) {
+    return "var(--pi-text-secondary)";
+  }
+  const b = manifest?.brands?.[slug];
+  return b?.hex ? `#${b.hex}` : "var(--pi-text-secondary)";
+}
+
+function labelFor(slug) {
+  if (slug.startsWith("symbol:")) return null; // keep the `bash` label for generic glyphs
+  return manifest?.brands?.[slug]?.title ?? null;
+}
+
+function buildLogoSvg(slug, themeId) {
+  const isSym = slug.startsWith("symbol:");
+  const path = isSym
+    ? manifest?.symbols?.[slug.slice(7)]
+    : manifest?.brands?.[slug]?.path;
+  if (!path) return null;
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("aria-hidden", "true");
+  svg.style.color = logoColorFor(slug, themeId);
+  const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  p.setAttribute("d", path);
+  p.setAttribute("fill", "currentColor");
+  svg.appendChild(p);
+  return svg;
+}
+
+function restoreLabel(label) {
+  if (label?.dataset.pendantOriginal !== undefined) {
+    label.textContent = label.dataset.pendantOriginal;
+    delete label.dataset.pendantOriginal;
+  }
+}
+
+function processBashBox(el, themeId) {
+  if (!manifest) return;
+  const header = el.querySelector(".msg-header");
+  if (!header) return;
+  const pre = el.querySelector(".part.shell-output");
+  const cmd = extractCommand(pre?.textContent ?? "");
+  const token = firstCommandToken(cmd);
+  const existing = header.querySelector(`.${LOGO_CLASS}`);
+  if (existing && existing.dataset.cmd === cmd && existing.dataset.token === token && existing.dataset.theme === themeId) return;
+
+  const slug = (token && manifest.commandToSlug?.[token]) || null;
+  const label = header.querySelector(".label");
+  if (existing) existing.remove();
+  if (!slug) {
+    restoreLabel(label);
+    return;
+  }
+  const svg = buildLogoSvg(slug, themeId);
+  if (!svg) return;
+  const wrap = document.createElement("span");
+  wrap.className = LOGO_CLASS;
+  wrap.dataset.cmd = cmd;
+  wrap.dataset.token = token;
+  wrap.dataset.slug = slug;
+  wrap.dataset.theme = themeId;
+  wrap.appendChild(svg);
+  if (label) {
+    const pretty = labelFor(slug);
+    if (pretty) {
+      label.dataset.pendantOriginal = label.dataset.pendantOriginal ?? label.textContent;
+      label.textContent = "";
+      label.appendChild(wrap);
+      label.appendChild(document.createTextNode(pretty));
+    } else {
+      label.insertBefore(wrap, label.firstChild);
+    }
+  } else {
+    header.insertBefore(wrap, header.firstChild);
+  }
+}
+
+function stripRoot(root) {
+  for (const w of root.querySelectorAll(`.${LOGO_CLASS}`)) w.remove();
+  for (const lab of root.querySelectorAll(".label")) restoreLabel(lab);
+}
+
+function sweepRoot(root) {
+  if (root !== document && !root.isConnected) {
+    observedRoots.delete(root);
+    return;
+  }
+  const themeId = activeThemeId();
+  if (!themeId) {
+    stripRoot(root);
+    return;
+  }
+  if (!manifest) {
+    if (!manifestFailed) {
+      loadManifest().then(() => scheduleSweep());
+    }
+    return;
+  }
+  for (const el of root.querySelectorAll(".msg.bash")) processBashBox(el, themeId);
+}
+
+function scheduleSweep() {
+  if (logoSweepScheduled) return;
+  logoSweepScheduled = true;
+  // setTimeout (not queueMicrotask): breaks synchronous microtask recursion in
+  // some environments (e.g. jsdom) where mutation callbacks drain inline, and
+  // the ~task-gap is imperceptible for UI in real browsers.
+  setTimeout(() => {
+    logoSweepScheduled = false;
+    for (const r of observedRoots) sweepRoot(r);
+  }, 0);
+}
+
+function observeRoot(root) {
+  if (observedRoots.has(root)) return;
+  observedRoots.add(root);
+  try {
+    new MutationObserver(() => scheduleSweep()).observe(root, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
+  } catch {
+    // Never break the page over observation failures.
+  }
+  sweepRoot(root);
+}
+
+function observeExistingShadowRoots(root) {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
+  for (let node = root; node !== null; node = walker.nextNode()) {
+    if (node instanceof Element && node.shadowRoot !== null) {
+      observeRoot(node.shadowRoot);
+      observeExistingShadowRoots(node.shadowRoot);
+    }
+  }
+}
+
+let logosInstalled = false;
+function installCommandLogos() {
+  if (logosInstalled) return;
+  logosInstalled = true;
+  loadManifest();
+  observeRoot(document);
+  observeExistingShadowRoots(document.documentElement);
+}
+
 // --- Style injection machinery ----------------------------------------------
 
 const pixelSheet = new CSSStyleSheet();
@@ -438,6 +651,7 @@ function adoptInto(shadowRoot) {
   if (!shadowRoot.adoptedStyleSheets.includes(pixelSheet)) {
     shadowRoot.adoptedStyleSheets = [...shadowRoot.adoptedStyleSheets, pixelSheet];
   }
+  observeRoot(shadowRoot);
 }
 
 function findAdoptedStyleSheetsDescriptor() {
@@ -489,7 +703,8 @@ function installPixelLayer() {
         return originalGet.call(this);
       },
       set(value) {
-        const sheets = [...value].filter((sheet) => sheet !== pixelSheet);
+        const arr = value ? [...value] : [];
+        const sheets = arr.filter((sheet) => sheet !== pixelSheet);
         sheets.push(pixelSheet);
         originalSet.call(this, sheets);
       },
@@ -511,8 +726,16 @@ function installPixelLayer() {
   // Cover shadow roots that already exist (plugins load after first render).
   adoptIntoExistingShadowRoots(document.documentElement);
 
-  // Enable/disable the structural layer as the active theme changes.
-  const observer = new MutationObserver(syncPixelSheet);
+  // Command logos: observe all roots for `.msg.bash` boxes and inject logos.
+  installCommandLogos();
+
+  // Enable/disable the structural layer as the active theme changes, and
+  // sweep command logos so they appear/disappear with the theme toggle.
+  const observer = new MutationObserver(() => {
+    syncPixelSheet();
+    manifestFailed = false;
+    scheduleSweep();
+  });
   observer.observe(document.documentElement, { attributes: true, attributeFilter: [THEME_ATTR] });
 }
 

@@ -6,7 +6,9 @@
   "type": "module",
   "files": [
     "pi-web-plugin.js",
-    "fonts"
+    "lib",
+    "fonts",
+    "logos"
   ],
   "keywords": [
     "pi-package",
@@ -15,7 +17,8 @@
     "theme",
     "pendant",
     "8-bit",
-    "retro"
+    "retro",
+    "command-logos"
   ],
   "piWeb": {
     "plugins": [
