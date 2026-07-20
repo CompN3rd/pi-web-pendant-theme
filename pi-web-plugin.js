@@ -465,9 +465,9 @@ img {
 /* Command logos injected into bash tool-card titles (Pendant-style). */
 .pendant-cmd-logo {
   display: inline-flex;
-  width: 14px;
-  height: 14px;
-  margin-right: 6px;
+  width: 1em;
+  height: 1em;
+  margin-right: 0.35em;
   vertical-align: middle;
 }
 .pendant-cmd-logo svg {
