@@ -483,6 +483,11 @@ img {
   display: none !important;
 }
 
+/* Hide the status icon (✓/✗) on logo-decorated cards — color alone is enough. */
+.tool-title:has(.pendant-cmd-logo) .status-icon {
+  display: none !important;
+}
+
 /* Scrollbars — thin, dark, flush with the panel edge (no border-radius).
    Webkit: 8px track + thumb. Firefox: thin + custom colors. */
 *::-webkit-scrollbar {
