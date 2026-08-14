@@ -2,6 +2,9 @@
 
 A [Pendant](https://pendant.run/)-inspired theme pack for [PI WEB](https://pi-web.dev/) with retro 8-bit aesthetics: sharp corners, flat surfaces, a subtle pixel grid, Source Sans 3 body font, and Press Start 2P pixel accents on section headers.
 
+Version 0.3 and later targets PI WEB's browser plugin API v2. PI WEB releases
+that reject browser API v1 will not discover older 0.2.x packages.
+
 ## Command logos
 
 When a Pendant theme is active, bash tool cards (`tool-execution-view` →
@@ -63,7 +66,9 @@ pi install -g @compn3rd/pi-web-pendant-theme
 ```
 
 Then reload the PI WEB browser tab and select a Pendant theme from the theme picker
-(gear icon or action palette).
+(gear icon or action palette). If upgrading from package version 0.2.x after a
+PI WEB upgrade, update/reinstall the package and hard-reload the tab so the v2
+browser entry is discovered.
 
 ### Manual
 
@@ -99,10 +104,14 @@ ln -s "$PWD" ~/.pi-web/plugins/pendant
 ### Tests
 
 ```bash
-node test-parse-command.js    # pure-logic: command-token + $-line parsing
+npm test    # parser, command-logo layout, and PI WEB browser-v2 package contracts
 ```
 
-(The DOM injection path is covered by manual testing on localhost:8504.)
+The source-contract tests check fixed logo sizing, SVG containment, PI WEB API
+version, required browser metadata, and module-relative asset URLs. They do not
+compute browser layout or load the package in PI WEB. Computed dimensions,
+responsive widths, DOM injection/re-render behavior, and theme transitions still
+require manual testing against a live PI WEB instance.
 
 ### Rebuilding the icon manifest
 

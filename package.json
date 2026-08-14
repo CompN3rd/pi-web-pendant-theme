@@ -1,11 +1,11 @@
 {
   "name": "@compn3rd/pi-web-pendant-theme",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "Pendant-inspired theme for PI WEB: Source Sans 3 body font, Press Start 2P pixel accents, sharp corners, flat surfaces, subtle pixel grid. Includes 6 dark variants (Amber CRT, Green Phosphor, Cyan/Teal, Nearly Monochrome, Muted Everything, plus the original) and a light variant.",
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "test": "node test-parse-command.js",
+    "test": "node test-parse-command.js && node test-command-logo-layout.js && node test-plugin-contract.js",
     "verify:parser": "node scripts/verify-parser-sync.mjs"
   },
   "files": [
@@ -29,6 +29,7 @@
     "plugins": [
       {
         "id": "pendant",
+        "browserRoot": ".",
         "module": "pi-web-plugin.js"
       }
     ]

@@ -77,8 +77,10 @@ function firstCommandToken(s) {
 
 const PLUGIN_ID = "pendant";
 const THEME_ATTR = "data-pi-web-theme";
-const FONT_BASE = `/pi-web-plugins/${PLUGIN_ID}/fonts`;
-const MANIFEST_URL = `/pi-web-plugins/${PLUGIN_ID}/logos/manifest.json`;
+// Resolve browser assets from the loaded module rather than the application
+// root. This survives reverse-proxy base paths and machine-scoped plugin URLs.
+const FONT_BASE = new URL("./fonts/", import.meta.url).href;
+const MANIFEST_URL = new URL("./logos/manifest.json", import.meta.url).href;
 
 // --- Color tokens -----------------------------------------------------------
 // Pendant dark palette: #111 bg, #171717 surface, #4f8cff accent, #47d18c green.
@@ -362,28 +364,28 @@ const pendantLightTokens = {
 const documentCss = `
 @font-face {
   font-family: "Pendant Source Sans 3";
-  src: url("${FONT_BASE}/SourceSans3VF-Upright.woff2") format("woff2-variations");
+  src: url("${FONT_BASE}SourceSans3VF-Upright.woff2") format("woff2-variations");
   font-weight: 200 900;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: "Pendant Source Sans 3";
-  src: url("${FONT_BASE}/SourceSans3VF-Italic.woff2") format("woff2-variations");
+  src: url("${FONT_BASE}SourceSans3VF-Italic.woff2") format("woff2-variations");
   font-weight: 200 900;
   font-style: italic;
   font-display: swap;
 }
 @font-face {
   font-family: "Pendant Source Code Pro";
-  src: url("${FONT_BASE}/SourceCodeVF-Upright.woff2") format("woff2-variations");
+  src: url("${FONT_BASE}SourceCodeVF-Upright.woff2") format("woff2-variations");
   font-weight: 200 900;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: "Pendant Press Start 2P";
-  src: url("${FONT_BASE}/PressStart2P-Regular.ttf") format("truetype");
+  src: url("${FONT_BASE}PressStart2P-Regular.ttf") format("truetype");
   font-weight: 400;
   font-display: swap;
 }
@@ -465,8 +467,9 @@ img {
 /* Command logos injected into bash tool-card titles (Pendant-style). */
 .pendant-cmd-logo {
   display: inline-flex;
-  width: 1em;
-  height: 1em;
+  flex: 0 0 15px;
+  width: 15px;
+  height: 15px;
   margin-right: 0.35em;
   vertical-align: middle;
 }
@@ -595,6 +598,7 @@ function buildLogoSvg(slug, themeId) {
   // All Simple Icons paths are pre-normalized to a 24x24 box (larger dimension
   // spans 24, centered), so a fixed viewBox renders every icon as intended.
   svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
   svg.setAttribute("aria-hidden", "true");
   svg.style.color = logoColorFor(slug, themeId);
   const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
@@ -815,7 +819,7 @@ function installPixelLayer() {
 // --- Plugin export ------------------------------------------------------------
 
 export default {
-  apiVersion: 1,
+  apiVersion: 2,
   name: "Pendant Theme",
   activate: () => {
     installPixelLayer();

@@ -17,8 +17,9 @@ bundle source is authoritative.)
 
 ### 0.1 Plugin contribution surface — NO render hook
 
-PI WEB calls each plugin's `activate({apiVersion:1, pluginId, html, svg})`
-and reads exactly these contribution points:
+PI WEB calls each browser plugin's
+`activate({apiVersion:2, pluginId, runtimePluginId, html, svg})` and rejects
+browser API v1 entries. It reads these contribution points:
 `actions`, `workspacePanels`, `workspaceLabels`, `themes`, `themePairs`.
 There is **no** `messageRender` / `partRender` / `toolCallRender` hook.
 → DOM observation is the only way to add command logos. (The `html`/`svg`
