@@ -819,7 +819,7 @@ function installPixelLayer() {
 // --- Plugin export ------------------------------------------------------------
 
 export default {
-  apiVersion: 2,
+  apiVersion: 4,
   name: "Pendant Theme",
   activate: () => {
     installPixelLayer();

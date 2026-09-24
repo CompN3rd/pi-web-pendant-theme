@@ -2,8 +2,10 @@
 
 A [Pendant](https://pendant.run/)-inspired theme pack for [PI WEB](https://pi-web.dev/) with retro 8-bit aesthetics: sharp corners, flat surfaces, a subtle pixel grid, Source Sans 3 body font, and Press Start 2P pixel accents on section headers.
 
-Version 0.3 and later targets PI WEB's browser plugin API v2. PI WEB releases
-that reject browser API v1 will not discover older 0.2.x packages.
+Version 0.4 targets PI WEB's browser plugin API v4, verified against PI WEB
+1.202609.1. Use version 0.3.0 for API v2 hosts. Current upstream rejects older
+browser API versions, even when the package is discovered and enabled.
+See [release notes](./CHANGELOG.md) for upgrade details.
 
 ## Command logos
 
@@ -66,9 +68,18 @@ pi install -g @compn3rd/pi-web-pendant-theme
 ```
 
 Then reload the PI WEB browser tab and select a Pendant theme from the theme picker
-(gear icon or action palette). If upgrading from package version 0.2.x after a
-PI WEB upgrade, update/reinstall the package and hard-reload the tab so the v2
-browser entry is discovered.
+(gear icon or action palette). After a PI WEB upgrade, install a matching
+plugin version and hard-reload the tab. An enabled plugin with no themes may
+have been rejected during browser loading: check the browser console for an
+unsupported API version error. This browser-only plugin needs no daemon restart.
+
+### Session extension load errors
+
+This is a browser-only plugin. Its `package.json` declares `pi.extensions: []`
+separately from `piWeb.plugins` so Pi does not try to import the package root
+as a session extension. If a new session reports `Failed to load extension:
+Cannot find module` pointing at this package directory, update the package to
+include that manifest and open a new session. No daemon restart is required.
 
 ### Manual
 
@@ -104,7 +115,7 @@ ln -s "$PWD" ~/.pi-web/plugins/pendant
 ### Tests
 
 ```bash
-npm test    # parser, command-logo layout, and PI WEB browser-v2 package contracts
+npm test    # parser, command-logo layout, and PI WEB browser-v4 package contracts
 ```
 
 The source-contract tests check fixed logo sizing, SVG containment, PI WEB API

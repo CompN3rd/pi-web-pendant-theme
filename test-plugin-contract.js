@@ -1,4 +1,4 @@
-// Source/package contract test for PI WEB browser plugin API v2.
+// Source/package contract test for PI WEB browser plugin API v4.
 // This catches discovery failures before publishing; it does not replace loading
 // the packed package in a current PI WEB runtime.
 // Run: node test-plugin-contract.js
@@ -11,13 +11,16 @@ const source = readFileSync(new URL('./pi-web-plugin.js', import.meta.url), 'utf
 const entries = packageJson.piWeb?.plugins;
 const publishedFiles = packageJson.files;
 
+// Without a pi manifest, Pi treats a local package with no conventional
+// resource directories as a session extension and tries to import its root.
+assert.deepEqual(packageJson.pi, { extensions: [] }, 'browser-only package must explicitly declare no Pi session extensions');
 assert.ok(Array.isArray(entries), 'package.json must declare piWeb.plugins as an array');
 assert.ok(Array.isArray(publishedFiles), 'package.json must declare published files');
 const plugin = entries.find((entry) => entry?.id === 'pendant');
 assert.ok(plugin, 'package.json must declare the pendant plugin');
 assert.equal(plugin.browserRoot, '.', 'browser plugin must declare its browserRoot');
 assert.equal(plugin.module, 'pi-web-plugin.js', 'browser module path must remain canonical');
-assert.match(source, /export default\s*\{\s*apiVersion:\s*2\s*,/, 'browser module must export PI WEB API v2');
+assert.match(source, /export default\s*\{\s*apiVersion:\s*4\s*,/, 'browser module must export PI WEB API v4');
 
 for (const relativePath of [
   plugin.module,
@@ -47,4 +50,4 @@ assert.match(
   'manifest URL must be module-relative for nested and federated deployments',
 );
 
-console.log('PI WEB browser plugin v2 package contract passed');
+console.log('PI WEB browser plugin v4 package contract passed');
