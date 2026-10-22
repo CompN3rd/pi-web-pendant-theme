@@ -2,7 +2,7 @@
 
 A [Pendant](https://pendant.run/)-inspired theme pack for [PI WEB](https://pi-web.dev/) with retro 8-bit aesthetics: sharp corners, flat surfaces, a subtle pixel grid, Source Sans 3 body font, and Press Start 2P pixel accents on section headers.
 
-This development version targets PI WEB browser API v5 **with CSS stylesheet
+Version 0.5.0 targets PI WEB browser API v5 **with CSS stylesheet
 contributions and `stylesheet-integration` v1**. API v5 alone is not sufficient:
 early v5 hosts did not include CSS-first themes. Verified against upstream
 `4c31ebc8` (1.202610.6). Use published version 0.4.0 for older v4 hosts.

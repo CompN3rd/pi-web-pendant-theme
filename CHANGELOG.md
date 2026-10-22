@@ -1,6 +1,15 @@
 # Changelog
 
-## Unreleased — v5 migration and refinement
+## 0.5.0 — 2026-10-22
+
+### Breaking compatibility change
+
+This release requires PI WEB browser API v5 **with CSS stylesheet contributions
+and `stylesheet-integration` v1**, verified against upstream `4c31ebc8`
+(1.202610.6). API v5 alone is not sufficient. Older v4 hosts should stay on
+version 0.4.0.
+
+### Migration and refinement
 
 - Require browser API v5 with stylesheet-integration v1 (early v5 hosts lack
   CSS-first themes). Keep 0.4.0 for older hosts.
@@ -13,6 +22,13 @@
 - Restore visible tool-status glyphs, remove blanket font/image overrides and
   improve muted text contrast across the experimental palettes.
 - Add 126 bounded palette contrast checks and a 19-view comparison gallery.
+- Require explicit visual-review destinations and expected profiles; report
+  transport failures without hiding runtime or non-resource console errors.
+
+### Upgrading
+
+Update the package on a compatible host and hard-reload the PI WEB browser tab.
+No web-process or session-daemon restart is required.
 
 ## 0.4.0
 
