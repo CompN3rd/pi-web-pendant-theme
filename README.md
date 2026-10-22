@@ -55,7 +55,9 @@ This package contributes 7 themes to PI WEB's theme picker:
 | **Muted Everything** | Desaturated hints at ~5–10% saturation |
 
 All themes share structural CSS in `styles/pendant.css`, with separate palette
-files in `styles/`. PI WEB owns stylesheet adoption and removal across the
+files in `styles/`. The refinement uses semantic font/chat/syntax properties,
+readable prose, targeted pixel headings, and visible tool-status glyphs. PI WEB
+owns stylesheet adoption and removal across the
 document and participating shadow roots. Command logos still use a private
 DOM adapter; no browser prototypes are patched.
 
@@ -122,7 +124,8 @@ ln -s "$PWD" ~/.pi-web/plugins/pendant
 ```bash
 npm test    # parser, command-logo layout, and PI WEB browser-v5 package contracts
 npm run verify:parser
-npm run test:visual -- migration  # requires a built current PI WEB checkout
+npm run test:visual -- refinement  # requires a built current PI WEB checkout
+npm run review:render              # regenerate comparisons from both capture sets
 ```
 
 The source-contract tests check fixed logo sizing, SVG containment, PI WEB API

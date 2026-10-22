@@ -1,4 +1,10 @@
 :root {
+  --pi-syntax-comment: #62686f;
+  --pi-syntax-keyword: #2356b0;
+  --pi-syntax-string: #28683d;
+  --pi-syntax-number: #815311;
+  --pi-syntax-title: #7046a0;
+  --pi-syntax-deletion: #b42b36;
   --pi-bg: #fafafa;
   --pi-surface: #ffffff;
   --pi-surface-hover: #f0f2f4;

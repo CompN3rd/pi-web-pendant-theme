@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased — v5 migration
+## Unreleased — v5 migration and refinement
 
 - Require browser API v5 with stylesheet-integration v1 (early v5 hosts lack
   CSS-first themes). Keep 0.4.0 for older hosts.
@@ -8,6 +8,11 @@
 - Remove global attachShadow/adoptedStyleSheets patches; isolate logo DOM
   discovery and clean up observers and timers on theme changes/disposal.
 - Add reproducible isolated real-browser captures and logo lifecycle checks.
+- Refine desktop proportions, semantic typography, conversation/activity surfaces
+  and syntax colours; retain square controls and targeted pixel section labels.
+- Restore visible tool-status glyphs, remove blanket font/image overrides and
+  improve muted text contrast across the experimental palettes.
+- Add 126 bounded palette contrast checks and a 19-view comparison gallery.
 
 ## 0.4.0
 

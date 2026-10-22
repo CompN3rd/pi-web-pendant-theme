@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pendant — migration / refinement</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #101113; color: #eee; font: 15px/1.5 system-ui, sans-serif; }
+  header { padding: 24px 28px; border-bottom: 1px solid #35383e; }
+  h1 { margin: 0 0 6px; font-size: 25px; font-weight: 650; }
+  p { margin: 6px 0; color: #b6bdc8; }
+  label { display: inline-block; margin-top: 14px; }
+  select { margin-left: 10px; padding: 8px 12px; background: #20242a; color: white; border: 1px solid #626b78; font: inherit; }
+  main { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 20px 24px; }
+  figure { min-width: 0; margin: 0; }
+  figcaption { padding: 0 0 12px; font-size: 17px; font-weight: 600; }
+  figcaption small { display: block; color: #b6bdc8; font-size: 13px; font-weight: 400; }
+  a { color: #a9caff; }
+  figure a { display: block; }
+  img { display: block; width: 100%; border: 1px solid #35383e; }
+  main.mobile { max-width: 860px; margin: auto; }
+  footer { padding: 0 28px 24px; color: #b6bdc8; font-size: 13px; }
+  @media(max-width:700px) { main { grid-template-columns: 1fr; } }
+</style>
+<header>
+  <h1>Pendant: v5 migration → visual refinement</h1>
+  <p>Real PI WEB interfaces, identical seeded content and viewport sizes. No mock UI or model calls.</p>
+  <label>Compare <select id="view">
+    <option value="desktop-chat">Desktop · conversation</option>
+    <option value="desktop-tools">Desktop · tool cards</option>
+    <option value="files-code">Files · TypeScript preview</option>
+    <option value="terminal">Terminal · echo command</option>
+    <option value="settings">Settings · general</option>
+    <option value="keyboard-focus">Keyboard focus</option>
+    <option value="second-session">Second session · design notes</option>
+    <option value="tablet-chat">Tablet · chat</option>
+    <option value="tablet-settings">Tablet · settings</option>
+    <option value="mobile-chat">Mobile · chat</option>
+    <option value="mobile-settings">Mobile · settings</option>
+    <option value="palette-dark">Palette · Dark</option>
+    <option value="palette-light">Palette · Light</option>
+    <option value="palette-amber">Palette · Amber CRT</option>
+    <option value="palette-green">Palette · Green Phosphor</option>
+    <option value="palette-cyan">Palette · Cyan / Teal</option>
+    <option value="palette-mono">Palette · Nearly Monochrome</option>
+    <option value="palette-muted">Palette · Muted Everything</option>
+    <option value="stock-restored">Stock theme · after switching away</option>
+  </select></label>
+</header>
+<main>
+  <figure><figcaption>01 / Migration<small>Host-managed v5 CSS; previous appearance retained</small></figcaption><a id="beforeLink"><img id="before" alt="Migration checkpoint"></a></figure>
+  <figure><figcaption>02 / Refinement<small>More chat space, semantic typography, quieter surfaces, visible status</small></figcaption><a id="afterLink"><img id="after" alt="Refined checkpoint"></a></figure>
+</main>
+<footer>Click either image for full resolution. Desktop: 1440 × 1000; tablet: 1024 × 768; mobile: 390 × 844.<br>
+PI WEB 1.202610.6 / upstream 4c31ebc8. Temporary paths, terminal prompts and session ordering can differ between runs.<br>
+<a href="README.md">Verification and limitations</a> · <a href="migration/results.json">Migration results</a> · <a href="refinement/results.json">Refinement results</a></footer>
+<script>
+const select = document.querySelector('#view');
+const initial = new URL(location.href).searchParams.get('view');
+if ([...select.options].some(o=>o.value===initial)) select.value=initial;
+function update() {
+  document.querySelector('main').classList.toggle('mobile',select.value.startsWith('mobile'));
+  for(const [id,stage] of [['before','migration'],['after','refinement']]) {
+    const url=`${stage}/${select.value}.png`;
+    document.getElementById(id).src=url;
+    document.getElementById(`${id}Link`).href=url;
+  }
+}
+select.addEventListener('change',update);update();
+</script>
+</html>

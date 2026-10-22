@@ -1,4 +1,10 @@
 :root {
+  --pi-syntax-comment: #929292;
+  --pi-syntax-keyword: #82aaff;
+  --pi-syntax-string: #9bcc9b;
+  --pi-syntax-number: #e4bb79;
+  --pi-syntax-title: #c0a5e8;
+  --pi-syntax-deletion: #ff8585;
   --pi-bg: #111111;
   --pi-surface: #171717;
   --pi-surface-hover: #202020;
@@ -9,7 +15,7 @@
   --pi-text: #f5f5f5;
   --pi-text-secondary: #b5b5b5;
   --pi-text-bright: #ffffff;
-  --pi-muted: #7f7f7f;
+  --pi-muted: #929292;
   --pi-dim: #666666;
   --pi-accent: #4f8cff;
   --pi-accent-border: #4f8cff;

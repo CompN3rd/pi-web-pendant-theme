@@ -1,4 +1,5 @@
-
+/* Shared by every Pendant palette. PI WEB owns adoption and removal.
+   Direct selectors below are experimental; verify against each host upgrade. */
 @font-face {
   font-family: "Pendant Source Sans 3";
   src: url("../fonts/SourceSans3VF-Upright.woff2") format("woff2-variations");
@@ -26,125 +27,122 @@
   font-weight: 400;
   font-display: swap;
 }
-body {
-  font-family: "Pendant Source Sans 3", Arial, Helvetica, sans-serif;
+:root {
+  --pi-font: "Pendant Source Sans 3", Arial, Helvetica, sans-serif;
+  --pi-mono: "Pendant Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --modal-surface-radius: 0;
+  --modal-surface-shadow: none;
+  --pi-thinking: var(--pi-accent);
+  --pi-tool: var(--pi-text-secondary);
+  --pi-chat-conversation-bg: var(--pi-bg);
+  --pi-chat-conversation-border: var(--pi-border);
+  --pi-chat-user-bg: color-mix(in srgb, var(--pi-accent) 5%, var(--pi-bg));
+  --pi-chat-user-border: var(--pi-accent-border);
+  --pi-chat-system-bg: var(--pi-surface);
+  --pi-chat-activity-bg: var(--pi-surface);
+  --pi-chat-compacting-bg: var(--pi-purple-surface);
 }
-/* Pendant's signature subtle pixel grid behind the app. Outer-tree rules win
-   over :host rules per-property, so only background-image/size are affected. */
+body { font-family: var(--pi-font); }
+modal-surface { --modal-surface-radius: 0; --modal-surface-shadow: none; }
 pi-web-app {
   background-image:
     linear-gradient(to right, color-mix(in srgb, var(--pi-text) 1%, transparent) 1px, transparent 1px),
     linear-gradient(to bottom, color-mix(in srgb, var(--pi-text) 1%, transparent) 1px, transparent 1px);
-  background-size: 32px 32px, 32px 32px;
+  background-size: 32px 32px;
 }
 
+/* Give conversation space back without replacing responsive/collapse logic. */
+@media (min-width: 1181px) {
+  :host(pi-web-app) .shell {
+    --navigation-panel-size: 280px;
+    --workspace-panel-size: minmax(340px, 32vw);
+  }
+}
+:host(pi-web-app), :host(chat-view) { font-family: var(--pi-font); }
+:host(chat-view) { font-size: 15px; }
+.ui-button, .ui-select { font-size: 13px; }
+.ui-button--action, .ui-select, .ui-input, .ui-form-error, .ui-dialog, .ui-menu,
+.code-block-frame, .code-block-header,
+:host(prompt-editor) .prompt-chip { border-radius: 0; }
 
-/* 8-bit: sharp boxes everywhere, no soft shadows, no rounded pills. */
-:host, *, *::before, *::after {
-  border-radius: 0 !important;
+/* Pixel lettering is an accent for UI sections, never the reading text. */
+:host(project-list) .section-name,
+:host(workspace-list) .section-name,
+:host(session-list) .section-name,
+:host(machine-list) .section-name,
+:host(settings-panel-frame) .section-heading h2 {
+  font-family: "Pendant Press Start 2P", ui-monospace, monospace;
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: .04em;
+  line-height: 1.8;
 }
-* {
-  box-shadow: none !important;
-  text-shadow: none !important;
-  backdrop-filter: none !important;
+:host(project-list) .action-row.selected,
+:host(workspace-list) .action-row.selected,
+:host(session-list) .action-row.selected {
+  box-shadow: inset 3px 0 0 var(--pi-accent);
+  background: color-mix(in srgb, var(--pi-accent) 9%, var(--pi-bg));
+}
+:host(project-list) .action-main,
+:host(workspace-list) .action-main,
+:host(session-list) .action-main { padding-block: 9px; }
+
+/* Readable prose and monospace code use the host's semantic font hooks.
+   No universal font inheritance: it breaks syntax spans and editor metrics. */
+:host(formatted-text) { font: 400 16px/1.6 var(--pi-font); }
+:host(formatted-text) h2 { font: 600 19px/1.35 var(--pi-font); letter-spacing: -.015em; }
+:host(formatted-text) h3 { font-weight: 600; }
+:host(formatted-text) strong { font-weight: 650; }
+:host(formatted-text) pre, :host(formatted-text) code { border-radius: 0; }
+:host(formatted-text) th { text-align: start; font-weight: 600; }
+:host(formatted-text) th, :host(formatted-text) td { padding: 6px 10px; }
+:host(formatted-text) blockquote { border-inline-start: 2px solid var(--pi-accent-border); }
+:host(chat-view) .conversation-body { padding: 16px 18px; }
+:host(chat-view) .group-msg + .group-msg { border-block-start-color: var(--pi-border-muted); }
+:host(chat-view) .event-group > summary { font-size: 12px; color: var(--pi-text-secondary); }
+:host(chat-view) .chat-image { --pi-image-radius: 0; }
+
+/* Quiet activity surfaces; failure/pending states keep a distinct tone and
+   the host's visible status glyph AND text (not colour alone). */
+.ui-transcript-activity {
+  --ui-transcript-bg: color-mix(in srgb, var(--ui-activity-tone) 3%, var(--pi-bg));
+  --ui-transcript-heading-bg: color-mix(in srgb, var(--ui-activity-tone) 7%, var(--pi-bg));
+}
+:host(tool-execution-view) .tool-title { align-items: center; gap: 6px; }
+:host(tool-execution-view) .tool-header { font-size: 13px; }
+:host(tool-execution-view) .status-icon { flex-shrink: 0; }
+:host(prompt-editor) footer { background: var(--pi-surface); border-top-color: var(--pi-border); }
+:host(prompt-editor) footer:focus-within { border-top-color: var(--pi-accent); }
+
+/* Inset outlines survive overflow clipping. Do not remove base focus rings. */
+.ui-button:focus-visible, .ui-select:focus-visible {
+  outline: 2px solid var(--pi-accent);
+  outline-offset: -2px;
 }
 
-/* Pendant body font: Source Sans 3, 15px, weight 430. */
-:host {
-  font-family: "Pendant Source Sans 3", Arial, Helvetica, sans-serif !important;
-  font-size: 15px !important;
-  font-weight: 430;
-}
-* {
-  font-family: inherit !important;
-}
-pre, code {
-  font-family: "Pendant Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace !important;
-}
-
-/* Tiny arcade kicker for section headers and the PI WEB logo. */
-h2,
-header > strong:first-child {
-  font-family: "Pendant Press Start 2P", ui-monospace, monospace !important;
-  font-size: 0.6rem !important;
-  line-height: 1.8 !important;
-  letter-spacing: 0.1em !important;
-  font-weight: 400 !important;
-}
-/* Buttons inside those kickers should stay normal. */
-button {
-  font-family: "Pendant Source Sans 3", Arial, Helvetica, sans-serif !important;
-  font-size: 15px !important;
-  font-weight: 430 !important;
-}
-
-/* Keep xterm's font metrics intact: it measures glyphs in JS with this exact
-   stack (see TerminalPanel), so the DOM renderer must use the same one. */
-.terminal-host, .terminal-host * {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace !important;
-}
-
-/* Crisp pixels for previews/avatars, crisp focus outlines. */
-img {
-  image-rendering: pixelated;
-}
-:focus-visible {
-  outline-width: 2px !important;
-  outline-offset: 0 !important;
-}
-
-/* Fewer visible hairlines: hide the most decorative muted separators. */
-.msg > .msg-header {
-  border-bottom-color: transparent !important;
-}
-
-/* Command logos injected into bash tool-card titles (Pendant-style). */
 .pendant-cmd-logo {
   display: inline-flex;
   flex: 0 0 15px;
   width: 15px;
   height: 15px;
-  margin-right: 0.35em;
   vertical-align: middle;
 }
 .pendant-cmd-logo svg {
   width: 100%;
   height: 100%;
   display: block;
-  /* color is set inline per-icon (brand hex, or a --pi-* token for symbols / mono themes) */
 }
-.pendant-cmd-name {
-  font-weight: 600;
-}
-.pendant-cmd-hidden {
-  display: none !important;
-}
+.pendant-cmd-name { font-weight: 600; }
+/* This one forced rule hides only the original name, never a status signal. */
+.pendant-cmd-hidden { display: none !important; }
 
-/* Hide the status icon (✓/✗) on logo-decorated cards — color alone is enough. */
-.tool-title:has(.pendant-cmd-logo) .status-icon {
-  display: none !important;
-}
-
-/* Scrollbars — thin, dark, flush with the panel edge (no border-radius).
-   Webkit: 8px track + thumb. Firefox: thin + custom colors. */
-*::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-*::-webkit-scrollbar-track {
-  background: transparent;
-}
-*::-webkit-scrollbar-thumb {
-  background: var(--pi-border);
-  border-radius: 0;
-}
-*::-webkit-scrollbar-thumb:hover {
-  background: var(--pi-dim);
-}
-*::-webkit-scrollbar-corner {
-  background: transparent;
-}
-* {
-  scrollbar-width: thin;
-  scrollbar-color: var(--pi-border) transparent;
+/* Keep images natural and terminal cell geometry host-owned. No img rule,
+   xterm override, blanket shadow reset or animation is needed for this look. */
+* { scrollbar-width: thin; scrollbar-color: var(--pi-border) transparent; }
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-track, *::-webkit-scrollbar-corner { background: transparent; }
+*::-webkit-scrollbar-thumb { background: var(--pi-border); border-radius: 0; }
+*::-webkit-scrollbar-thumb:hover { background: var(--pi-muted); }
+@media (max-width: 600px) {
+  :host(chat-view) .conversation-body { padding: 14px 12px; }
 }

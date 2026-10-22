@@ -5,8 +5,9 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "test": "node test-parse-command.js && node test-command-logo-layout.js && node test-plugin-contract.js",
+    "test": "node test-parse-command.js && node test-command-logo-layout.js && node test-plugin-contract.js && node test-theme-appearance.js",
     "test:visual": "node scripts/visual-review.mjs",
+    "review:render": "node scripts/render-comparisons.mjs",
     "verify:parser": "node scripts/verify-parser-sync.mjs",
     "prepublishOnly": "npm test && npm run verify:parser"
   },
