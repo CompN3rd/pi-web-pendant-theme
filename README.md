@@ -124,7 +124,7 @@ ln -s "$PWD" ~/.pi-web/plugins/pendant
 ```bash
 npm test    # parser, command-logo layout, and PI WEB browser-v5 package contracts
 npm run verify:parser
-npm run test:visual -- refinement  # requires a built current PI WEB checkout
+npm run test:visual -- refinement --profile refinement  # requires a built current PI WEB checkout
 npm run review:render              # regenerate comparisons from both capture sets
 ```
 

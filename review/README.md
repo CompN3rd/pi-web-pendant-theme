@@ -11,7 +11,7 @@ matched views (38 source PNGs) with full-resolution links. Static previews:
 - [Mobile conversation](./compare-mobile-chat.png)
 - [All refined palettes](./refined-palettes.png)
 
-| Migration (`91e0652`) | Refinement (next commit) |
+| Migration (`91e0652`) | Refinement (`b43ef01`) |
 | --- | --- |
 | Existing 340px desktop navigation / 42vw workspace | 280px navigation / 32vw workspace; more room for chat |
 | Blanket font overrides and pixel Markdown headings | Semantic fonts; 16px prose, normal reading headings, pixel UI section labels |
@@ -48,10 +48,13 @@ start/dispose lifecycle. CSS selectors remain experimental host internals.
 3. Set `PI_WEB_SOURCE` to that built checkout (default:
    `../worktrees/pendant-v5-preview`).
 4. Install Edge, or set `CHROME_BIN` to a Chromium executable.
-5. `npm run test:visual -- refinement` (use another output name for a new run).
+5. `npm run test:visual -- refinement --profile refinement`. Both output directory
+   and expected profile are required. Use another directory for a new run, or
+   an absolute temporary path to leave the gallery untouched. Relative paths
+   resolve under `review/`; existing captures in the chosen directory are replaced.
 6. To regenerate the baseline with the same driver, check out `91e0652` in a
    separate worktree, set `PI_PENDANT_SOURCE` to it, and run
-   `npm run test:visual -- migration`.
+   `npm run test:visual -- migration --profile migration`.
 7. `npm run review:render` verifies the 19 image pairs and rebuilds comparison
    PNGs from the source captures. `review/index.html` also works via `file://`.
 
@@ -93,7 +96,10 @@ chat/settings.
 
 The host's initial notification request for an unhosted saved session can return
 404; that specific response is excluded from failed-resource checks. No other
-HTTP failures or browser errors are accepted. Auto-installed bundled package
+HTTP failures or browser errors are accepted. Transport failures are recorded
+through Playwright's `requestfailed` event, including aborted requests; there
+are currently no cancellation exclusions. The expected profile selects the
+assertions independently of the observed theme CSS. Auto-installed bundled package
 skills/extensions are excluded in the isolated agent profile so unrelated
 skill-frontmatter warnings do not obscure the screenshots.
 

@@ -9,11 +9,12 @@ import { tmpdir } from 'node:os';
 import { resolve, join } from 'node:path';
 import assert from 'node:assert/strict';
 import { checkLogoLifecycle } from './check-logo-lifecycle.mjs';
+import { captureOptions, observeBrowserErrors } from './visual-review-checks.mjs';
 
 const host = resolve(process.env.PI_WEB_SOURCE ?? '../worktrees/pendant-v5-preview');
-const stage = process.argv[2] ?? 'migration';
+const { directory, profile } = captureOptions(process.argv.slice(2));
 const pluginSource = resolve(process.env.PI_PENDANT_SOURCE ?? '.');
-const output = resolve('review', stage);
+const output = resolve('review', directory);
 const temp = await mkdtemp(join(tmpdir(), 'pendant-review-'));
 const children = [];
 let browser;
@@ -22,6 +23,7 @@ const errors = [];
 const checks = [];
 const sessionId = '019ef4c0-0000-7000-8000-000000000001';
 const projectId = 'pendant-review';
+const releaseConfig = '// Keep release intent explicit.\nexport const release = {\n  channel: "preview",\n  retries: 3,\n  dryRun: true,\n};\n';
 const demo = join(temp, 'workspace');
 const workspaceId = createHash('sha1').update(`${projectId}:${demo}`).digest('hex').slice(0, 12);
 const port = async () => new Promise(resolve => { const s = createServer(); s.listen(0, '127.0.0.1', () => { const p = s.address().port; s.close(() => resolve(p)); }); });
@@ -57,7 +59,7 @@ async function seed() {
     assistant([{type:'toolCall',id,name:'bash',arguments:{command}}]);
     add('message',{message:{role:'toolResult',toolCallId:id,toolName:'bash',content:[{type:'text',text:result}],isError,timestamp:ms+n*1000}});
   }
-  assistant([{type:'text',text:'## Release review\n\nThe tests pass, but packaging needs **one configuration fix**.\n\n| Check | Result |\n| --- | --- |\n| Unit tests | 24 passed |\n| Working tree | 2 changes to review |\n| Package build | Missing release channel |\n\n```typescript\n// Keep release intent explicit.\nexport const release = {\n  channel: "preview",\n  retries: 3,\n  dryRun: true,\n};\n```\n\n> Set the channel, then rerun the build before publishing.\n\nSee [release notes](./docs/release.md) for the remaining checklist.'}]);
+  assistant([{type:'text',text:'## Release review\n\nThe tests pass, but packaging needs **one configuration fix**.\n\n| Check | Result |\n| --- | --- |\n| Unit tests | 24 passed |\n| Working tree | 2 changes to review |\n| Package build | Missing release channel |\n\n```typescript\n' + releaseConfig + '```\n\n> Set the channel, then rerun the build before publishing.\n\nSee [release notes](./docs/release.md) for the remaining checklist.'}]);
   await writeFile(join(temp,'sessions','review.jsonl'), entries.map(e=>JSON.stringify(e)).join('\n')+'\n');
   const notes = structuredClone(entries.slice(0,4));
   notes[0].id='019ef4c0-0000-7000-8000-000000000002';
@@ -67,7 +69,7 @@ async function seed() {
 }
 try {
   await Promise.all([output, demo, join(demo,'src'), join(demo,'docs'), join(temp,'data','plugins'), join(temp,'agent'), join(temp,'sessions')].map(p=>mkdir(p,{recursive:true})));
-  await writeFile(join(demo,'src','config.ts'), '// Keep release intent explicit.\nexport const release = {\n  channel: "preview",\n  retries: 3,\n  dryRun: true,\n};\n');
+  await writeFile(join(demo,'src','config.ts'), releaseConfig);
   await writeFile(join(demo,'docs','release.md'), '# Release checklist\n\n- [x] Unit tests\n- [ ] Configure release channel\n- [ ] Review working tree\n\n> Preview only. Do not deploy.\n');
   await writeFile(join(demo,'README.md'), '# Pendant sample project\n\nA deterministic visual-review fixture.\n');
   execFileSync('git',['init','-q',demo]);
@@ -92,9 +94,7 @@ try {
   browser = await chromium.launch(process.env.CHROME_BIN ? {executablePath:process.env.CHROME_BIN} : {channel:'msedge'});
   const context = await browser.newContext({viewport:{width:1440,height:1000},deviceScaleFactor:1});
   page = await context.newPage();
-  page.on('pageerror', error=>errors.push(error.message));
-  page.on('console', message=>{if(message.type()==='error' && !message.text().startsWith('Failed to load resource:')) errors.push(message.text());});
-  page.on('response', response=>{if(response.status()>=400 && !(response.status()===404 && new URL(response.url()).pathname.endsWith('/notifications'))) errors.push(`${response.status()} ${response.url()}`);});
+  observeBrowserErrors(page, errors);
   const url = `http://127.0.0.1:${api}/?project=${projectId}&workspace=${workspaceId}&session=${sessionId}&view=chat`;
   await page.addInitScript(()=>{
     localStorage.setItem('pi-web-app-theme',JSON.stringify({themeId:'pendant:dark',auto:false}));
@@ -131,8 +131,8 @@ try {
   const sizes = await page.locator('.pendant-cmd-logo').evaluateAll(nodes=>nodes.map(n=>({width:n.getBoundingClientRect().width,height:n.getBoundingClientRect().height})));
   for(const size of sizes) assert.deepEqual(size,{width:15,height:15});
   checks.push('Three real tool cards decorated with fixed 15px logos');
-  const refined = await page.evaluate(()=>getComputedStyle(document.documentElement).getPropertyValue('--pi-font').includes('Pendant'));
-  if(refined) {
+  if(profile==='refinement') {
+    assert(await page.evaluate(()=>getComputedStyle(document.documentElement).getPropertyValue('--pi-font').includes('Pendant')), 'Refinement must supply the semantic font override');
     assert(await page.locator('tool-execution-view .status-icon').evaluateAll(nodes=>nodes.every(n=>getComputedStyle(n).display!=='none')));
     const typography = await page.locator('formatted-text').first().evaluate(n=>({family:getComputedStyle(n).fontFamily,size:getComputedStyle(n).fontSize}));
     assert(typography.family.includes('Pendant Source Sans 3'));
@@ -181,7 +181,7 @@ try {
   await page.evaluate(()=>document.querySelector('pi-web-app').openSettings('general'));
   await page.locator('settings-dialog').waitFor();
   await shot('settings');
-  if(refined) assert.equal(await page.locator('settings-dialog modal-surface .surface').evaluate(n=>getComputedStyle(n).borderTopLeftRadius),'0px');
+  if(profile==='refinement') assert.equal(await page.locator('settings-dialog modal-surface .surface').evaluate(n=>getComputedStyle(n).borderTopLeftRadius),'0px');
   await page.evaluate(()=>document.querySelector('pi-web-app').closeSettings());
   for(const [name,width,height] of [['tablet',1024,768],['mobile',390,844]]) {
     await page.setViewportSize({width,height});
@@ -204,7 +204,7 @@ try {
   assert(moduleUrl, 'Pendant browser module must have loaded');
   checks.push(...await checkLogoLifecycle(page.context(), moduleUrl));
   console.log('Capture ready:',output,'logs:',temp);
-  await json(join(output,'results.json'),{browser:browser.version(),pluginHash:createHash('sha256').update(await readFile(join(pluginSource,'pi-web-plugin.js'))).update(await readFile(join(pluginSource,'styles','pendant.css'))).digest('hex'),host:execFileSync('git',['-C',host,'rev-parse','HEAD'],{encoding:'utf8'}).trim(),checks,errors});
+  await json(join(output,'results.json'),{profile,browser:browser.version(),pluginHash:createHash('sha256').update(await readFile(join(pluginSource,'pi-web-plugin.js'))).update(await readFile(join(pluginSource,'styles','pendant.css'))).digest('hex'),host:execFileSync('git',['-C',host,'rev-parse','HEAD'],{encoding:'utf8'}).trim(),checks,errors});
   if(errors.length) throw new Error(`Browser errors: ${errors.join('\n')}`);
 } catch (error) {
   await page?.screenshot({path:join(output,'failure.png')}).catch(()=>{});
