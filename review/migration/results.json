@@ -1,0 +1,21 @@
+{
+  "host": "4c31ebc8ee78e8e1ca5eadd4ab24967dcb5a95ba",
+  "checks": [
+    "Real host loaded Pendant v5 and the seeded session",
+    "attachShadow prototype untouched",
+    "adoptedStyleSheets prototype untouched",
+    "Three real tool cards decorated with fixed 15px logos",
+    "Palette light: stylesheet loaded, logos retained",
+    "Palette amber: stylesheet loaded, logos retained",
+    "Palette green: stylesheet loaded, logos retained",
+    "Palette cyan: stylesheet loaded, logos retained",
+    "Palette mono: stylesheet loaded, logos retained",
+    "Palette muted: stylesheet loaded, logos retained",
+    "Palette dark: stylesheet loaded, logos retained",
+    "Switch to stock removes all logo decorations",
+    "tablet: no document horizontal overflow",
+    "mobile: no document horizontal overflow",
+    "Logo adapter: command mutation, recycled non-bash card, unknown command, late shadow root, disconnect/reconnect, stock/mono switching, disposal"
+  ],
+  "errors": []
+}

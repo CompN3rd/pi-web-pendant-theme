@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "test": "node test-parse-command.js && node test-command-logo-layout.js && node test-plugin-contract.js",
+    "test:visual": "node scripts/visual-review.mjs",
     "verify:parser": "node scripts/verify-parser-sync.mjs",
     "prepublishOnly": "npm test && npm run verify:parser"
   },
@@ -14,6 +15,7 @@
     "pi-web-plugin.js",
     "lib",
     "scripts/verify-parser-sync.mjs",
+    "styles",
     "fonts",
     "logos"
   ],
@@ -49,5 +51,8 @@
   "bugs": {
     "url": "https://github.com/CompN3rd/pi-web-pendant-theme/issues"
   },
-  "homepage": "https://github.com/CompN3rd/pi-web-pendant-theme#readme"
+  "homepage": "https://github.com/CompN3rd/pi-web-pendant-theme#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.64.1"
+  }
 }

@@ -4,7 +4,8 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-const source = readFileSync(new URL('./pi-web-plugin.js', import.meta.url), 'utf8');
+const source = readFileSync(new URL('./styles/pendant.css', import.meta.url), 'utf8') +
+  readFileSync(new URL('./pi-web-plugin.js', import.meta.url), 'utf8');
 
 function cssDeclarations(selector) {
   const marker = `${selector} {`;

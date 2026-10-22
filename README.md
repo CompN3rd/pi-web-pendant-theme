@@ -2,10 +2,12 @@
 
 A [Pendant](https://pendant.run/)-inspired theme pack for [PI WEB](https://pi-web.dev/) with retro 8-bit aesthetics: sharp corners, flat surfaces, a subtle pixel grid, Source Sans 3 body font, and Press Start 2P pixel accents on section headers.
 
-Version 0.4 targets PI WEB's browser plugin API v4, verified against PI WEB
-1.202609.1. Use version 0.3.0 for API v2 hosts. Current upstream rejects older
-browser API versions, even when the package is discovered and enabled.
-See [release notes](./CHANGELOG.md) for upgrade details.
+This development version targets PI WEB browser API v5 **with CSS stylesheet
+contributions and `stylesheet-integration` v1**. API v5 alone is not sufficient:
+early v5 hosts did not include CSS-first themes. Verified against upstream
+`4c31ebc8` (1.202610.6). Use published version 0.4.0 for older v4 hosts.
+Current upstream still accepts v4 plugins with a deprecation diagnostic.
+See [visual review](./review/README.md) for verification and captures.
 
 ## Command logos
 
@@ -52,7 +54,10 @@ This package contributes 7 themes to PI WEB's theme picker:
 | **Nearly Monochrome** | Pure grayscale — every accent is a different shade of gray |
 | **Muted Everything** | Desaturated hints at ~5–10% saturation |
 
-All dark themes share the same structural styling: sharp `border-radius: 0`, flat surfaces (no box-shadows), `image-rendering: pixelated`, and a 32px subtle pixel-grid background.
+All themes share structural CSS in `styles/pendant.css`, with separate palette
+files in `styles/`. PI WEB owns stylesheet adoption and removal across the
+document and participating shadow roots. Command logos still use a private
+DOM adapter; no browser prototypes are patched.
 
 Fonts are bundled as WOFF2/TTF (no external requests):
 - **Source Sans 3** (variable) — body text
@@ -115,14 +120,17 @@ ln -s "$PWD" ~/.pi-web/plugins/pendant
 ### Tests
 
 ```bash
-npm test    # parser, command-logo layout, and PI WEB browser-v4 package contracts
+npm test    # parser, command-logo layout, and PI WEB browser-v5 package contracts
+npm run verify:parser
+npm run test:visual -- migration  # requires a built current PI WEB checkout
 ```
 
 The source-contract tests check fixed logo sizing, SVG containment, PI WEB API
 version, required browser metadata, and module-relative asset URLs. They do not
 compute browser layout or load the package in PI WEB. Computed dimensions,
 responsive widths, DOM injection/re-render behavior, and theme transitions still
-require manual testing against a live PI WEB instance.
+are checked by the real-browser visual harness as well. See `review/README.md`
+for prerequisites and the remaining coverage boundaries.
 
 ### Rebuilding the icon manifest
 

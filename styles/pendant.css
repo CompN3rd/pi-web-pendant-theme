@@ -1,0 +1,150 @@
+
+@font-face {
+  font-family: "Pendant Source Sans 3";
+  src: url("../fonts/SourceSans3VF-Upright.woff2") format("woff2-variations");
+  font-weight: 200 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Pendant Source Sans 3";
+  src: url("../fonts/SourceSans3VF-Italic.woff2") format("woff2-variations");
+  font-weight: 200 900;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Pendant Source Code Pro";
+  src: url("../fonts/SourceCodeVF-Upright.woff2") format("woff2-variations");
+  font-weight: 200 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Pendant Press Start 2P";
+  src: url("../fonts/PressStart2P-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-display: swap;
+}
+body {
+  font-family: "Pendant Source Sans 3", Arial, Helvetica, sans-serif;
+}
+/* Pendant's signature subtle pixel grid behind the app. Outer-tree rules win
+   over :host rules per-property, so only background-image/size are affected. */
+pi-web-app {
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--pi-text) 1%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--pi-text) 1%, transparent) 1px, transparent 1px);
+  background-size: 32px 32px, 32px 32px;
+}
+
+
+/* 8-bit: sharp boxes everywhere, no soft shadows, no rounded pills. */
+:host, *, *::before, *::after {
+  border-radius: 0 !important;
+}
+* {
+  box-shadow: none !important;
+  text-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+/* Pendant body font: Source Sans 3, 15px, weight 430. */
+:host {
+  font-family: "Pendant Source Sans 3", Arial, Helvetica, sans-serif !important;
+  font-size: 15px !important;
+  font-weight: 430;
+}
+* {
+  font-family: inherit !important;
+}
+pre, code {
+  font-family: "Pendant Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace !important;
+}
+
+/* Tiny arcade kicker for section headers and the PI WEB logo. */
+h2,
+header > strong:first-child {
+  font-family: "Pendant Press Start 2P", ui-monospace, monospace !important;
+  font-size: 0.6rem !important;
+  line-height: 1.8 !important;
+  letter-spacing: 0.1em !important;
+  font-weight: 400 !important;
+}
+/* Buttons inside those kickers should stay normal. */
+button {
+  font-family: "Pendant Source Sans 3", Arial, Helvetica, sans-serif !important;
+  font-size: 15px !important;
+  font-weight: 430 !important;
+}
+
+/* Keep xterm's font metrics intact: it measures glyphs in JS with this exact
+   stack (see TerminalPanel), so the DOM renderer must use the same one. */
+.terminal-host, .terminal-host * {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace !important;
+}
+
+/* Crisp pixels for previews/avatars, crisp focus outlines. */
+img {
+  image-rendering: pixelated;
+}
+:focus-visible {
+  outline-width: 2px !important;
+  outline-offset: 0 !important;
+}
+
+/* Fewer visible hairlines: hide the most decorative muted separators. */
+.msg > .msg-header {
+  border-bottom-color: transparent !important;
+}
+
+/* Command logos injected into bash tool-card titles (Pendant-style). */
+.pendant-cmd-logo {
+  display: inline-flex;
+  flex: 0 0 15px;
+  width: 15px;
+  height: 15px;
+  margin-right: 0.35em;
+  vertical-align: middle;
+}
+.pendant-cmd-logo svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  /* color is set inline per-icon (brand hex, or a --pi-* token for symbols / mono themes) */
+}
+.pendant-cmd-name {
+  font-weight: 600;
+}
+.pendant-cmd-hidden {
+  display: none !important;
+}
+
+/* Hide the status icon (✓/✗) on logo-decorated cards — color alone is enough. */
+.tool-title:has(.pendant-cmd-logo) .status-icon {
+  display: none !important;
+}
+
+/* Scrollbars — thin, dark, flush with the panel edge (no border-radius).
+   Webkit: 8px track + thumb. Firefox: thin + custom colors. */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--pi-border);
+  border-radius: 0;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--pi-dim);
+}
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--pi-border) transparent;
+}

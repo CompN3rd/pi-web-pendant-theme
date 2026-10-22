@@ -1,0 +1,37 @@
+:root {
+  --pi-bg: #080808;
+  --pi-surface: #121212;
+  --pi-surface-hover: #1c1c1c;
+  --pi-terminal-bg: #030303;
+  --pi-terminal-text: #e0e0e0;
+  --pi-border: #242424;
+  --pi-border-muted: #181818;
+  --pi-text: #e0e0e0;
+  --pi-text-secondary: #a0a0a0;
+  --pi-text-bright: #f0f0f0;
+  --pi-muted: #707070;
+  --pi-dim: #505050;
+  --pi-accent: #cccccc;
+  --pi-accent-border: #888888;
+  --pi-selection-bg: #282828;
+  --pi-success: #aaaaaa;
+  --pi-success-border: #777777;
+  --pi-success-bg: #121212;
+  --pi-success-surface: #1c1c1c;
+  --pi-success-ring: #aaaaaa55;
+  --pi-warning: #bbbbbb;
+  --pi-warning-border: #888888;
+  --pi-warning-surface: #1c1c1c;
+  --pi-danger: #cccccc;
+  --pi-purple: #bbbbbb;
+  --pi-purple-border: #888888;
+  --pi-purple-surface: #1c1c1c;
+  --pi-overlay: #000a;
+  --pi-shadow-soft: #0004;
+  --pi-shadow: #0006;
+  --pi-shadow-strong: #0008;
+  --pi-bg-overlay-soft: #080808dd;
+  --pi-bg-overlay: #080808e6;
+  --pi-success-bg-overlay: #121212ee;
+  --pi-terminal-selection: #303030;
+}

@@ -1,0 +1,37 @@
+:root {
+  --pi-bg: #0a0a0a;
+  --pi-surface: #141414;
+  --pi-surface-hover: #1e1e1e;
+  --pi-terminal-bg: #050505;
+  --pi-terminal-text: #dfdfdf;
+  --pi-border: #262626;
+  --pi-border-muted: #1a1a1a;
+  --pi-text: #dfdfdf;
+  --pi-text-secondary: #9f9f9f;
+  --pi-text-bright: #efefef;
+  --pi-muted: #6f6f6f;
+  --pi-dim: #4f4f4f;
+  --pi-accent: #8899aa;
+  --pi-accent-border: #667788;
+  --pi-selection-bg: #1a1a22;
+  --pi-success: #889a88;
+  --pi-success-border: #667a66;
+  --pi-success-bg: #0f140f;
+  --pi-success-surface: #1a1f1a;
+  --pi-success-ring: #889a8855;
+  --pi-warning: #9a9a77;
+  --pi-warning-border: #7a7a55;
+  --pi-warning-surface: #1c1c14;
+  --pi-danger: #9a7777;
+  --pi-purple: #8877aa;
+  --pi-purple-border: #665588;
+  --pi-purple-surface: #14141e;
+  --pi-overlay: #000a;
+  --pi-shadow-soft: #0004;
+  --pi-shadow: #0006;
+  --pi-shadow-strong: #0008;
+  --pi-bg-overlay-soft: #0a0a0add;
+  --pi-bg-overlay: #0a0a0ae6;
+  --pi-success-bg-overlay: #0f140fee;
+  --pi-terminal-selection: #282828;
+}

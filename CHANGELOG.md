@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased — v5 migration
+
+- Require browser API v5 with stylesheet-integration v1 (early v5 hosts lack
+  CSS-first themes). Keep 0.4.0 for older hosts.
+- Move seven palettes and shared structural styling into host-managed CSS files.
+- Remove global attachShadow/adoptedStyleSheets patches; isolate logo DOM
+  discovery and clean up observers and timers on theme changes/disposal.
+- Add reproducible isolated real-browser captures and logo lifecycle checks.
+
 ## 0.4.0
 
 ### Breaking compatibility change
