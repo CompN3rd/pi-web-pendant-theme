@@ -28,7 +28,8 @@
     "pendant",
     "8-bit",
     "retro",
-    "command-logos"
+    "command-logos",
+    "pi-web.dev-plugin"
   ],
   "pi": {
     "extensions": []

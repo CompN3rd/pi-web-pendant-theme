@@ -11,6 +11,13 @@ const source = readFileSync(new URL('./pi-web-plugin.js', import.meta.url), 'utf
 const entries = packageJson.piWeb?.plugins;
 const publishedFiles = packageJson.files;
 
+for (const keyword of ['pi-web.dev-plugin', 'pi-package', 'pi-web-plugin']) {
+  assert.ok(packageJson.keywords?.includes(keyword), `missing community discovery keyword: ${keyword}`);
+}
+assert.ok(packageJson.description?.trim(), 'community packages need a useful description');
+assert.match(packageJson.repository?.url ?? '', /^git\+https:\/\/github\.com\/.+\.git$/, 'community packages need a repository link');
+assert.equal(packageJson.publishConfig?.access, 'public', 'community packages must be publicly publishable');
+
 // Without a pi manifest, Pi treats a local package with no conventional
 // resource directories as a session extension and tries to import its root.
 assert.deepEqual(packageJson.pi, { extensions: [] }, 'browser-only package must explicitly declare no Pi session extensions');

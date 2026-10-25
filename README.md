@@ -68,7 +68,14 @@ Fonts are bundled as WOFF2/TTF (no external requests):
 
 ## Installation
 
-### Via Pi (recommended)
+### Via PI WEB (recommended)
+
+On the target machine, open **Settings → Pi packages**, enter
+`npm:@compn3rd/pi-web-pendant-theme`, and choose **Install**. Then open
+**Settings → PI WEB plugins** and enable **Pendant** if needed. Installing the
+package and enabling its web integration are separate steps.
+
+### Via Pi CLI
 
 ```bash
 pi install -g @compn3rd/pi-web-pendant-theme
@@ -143,6 +150,16 @@ for prerequisites and the remaining coverage boundaries.
 ```bash
 node scripts/build-manifest.js
 ```
+
+## Community discovery
+
+This package declares `piWeb.plugins` and the `pi-web.dev-plugin`, `pi-package`,
+and `pi-web-plugin` npm keywords required by the
+[PI WEB community directory](https://pi-web.dev/community-plugins). No separate
+registration or submission is needed. Discovery requires publishing a new public
+npm version containing this metadata; npm search indexing may take time. Source
+changes alone do not update the directory. The compatibility and installation
+requirements above still apply.
 
 ## License
 
