@@ -91,6 +91,14 @@ try {
   await ready(`http://127.0.0.1:${daemon}/health`);
   start('web','dist/server/index.js',env);
   await ready(`http://127.0.0.1:${api}/api/projects`);
+  // A ready HTTP server can still be discovering installed theme packages.
+  // Warm the static catalog before testing a persisted theme preference.
+  for (let attempt = 0; ; attempt++) {
+    const catalog = await fetch(`http://127.0.0.1:${api}/api/themes`).then(r => r.json());
+    if (JSON.stringify(catalog).includes('pendant:dark')) break;
+    if (attempt >= 119) throw new Error(`Pendant absent from theme catalog; logs: ${temp}`);
+    await wait(250);
+  }
   browser = await chromium.launch(process.env.CHROME_BIN ? {executablePath:process.env.CHROME_BIN} : {channel:'msedge'});
   const context = await browser.newContext({viewport:{width:1440,height:1000},deviceScaleFactor:1});
   page = await context.newPage();
@@ -142,6 +150,11 @@ try {
   }
   await scrollChat(false);
   await shot('desktop-tools');
+  // Since 1.202610.9 startup only loads the selected theme and its pair.
+  // Opening General settings loads the complete picker inventory.
+  await page.evaluate(()=>document.querySelector('pi-web-app').openSettings('general'));
+  await page.waitForFunction(()=>document.querySelector('pi-web-app').plugins.getThemes().some(t=>t.id==='pendant:amber'));
+  await page.evaluate(()=>document.querySelector('pi-web-app').closeSettings());
   for(const id of ['light','amber','green','cyan','mono','muted','dark']) {
     await theme(`pendant:${id}`);
     assert.equal(await page.locator('.pendant-cmd-logo').count(),3);

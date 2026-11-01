@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.6.0 — 2026-11-01
+
+- Require PI WEB >=1.202610.9. Move all seven themes and the Auto pair to
+  declarative package metadata for early palette loading without deprecated
+  runtime registrations; preserve existing selection IDs.
+- Use supported conversation-body, navigation-current, and composer context
+  hooks instead of private selectors. Keep the command-logo adapter separate.
+- Add static catalog regression tests and tag-based GitHub Actions publication
+  with isolated npm OIDC authentication, provenance, and verified tarballs.
+- Verify the release against PI WEB 1.202610.9 in Chromium: all palettes,
+  Auto switching, stock restoration, responsive layouts, and logo lifecycle.
+  Update the visual harness for lazy theme catalog discovery.
+
 ## 0.5.0 — 2026-10-22
 
 ### Breaking compatibility change

@@ -1,7 +1,7 @@
 // PI WEB plugin: Pendant 8-bit theme.
 //
-// Contributes CSS-first themes (original palette taken from pendant.run)
-// plus a host-managed structural stylesheet that mirrors Pendant's
+// Themes are declared statically in package.json (palette from pendant.run).
+// Their host-managed structural stylesheet mirrors Pendant's
 // look: Source Sans 3 body font, Source Code Pro for code, Press Start 2P only
 // as a tiny arcade accent on section headers (Pendant reserves it for the logo
 // and kicker labels), sharp corners, flat surfaces, subtle 32px pixel grid.
@@ -80,14 +80,6 @@ const THEME_ATTR = "data-pi-web-theme";
 // Resolve browser assets from the loaded module rather than the application
 // root. This survives reverse-proxy base paths and machine-scoped plugin URLs.
 const MANIFEST_URL = new URL("./logos/manifest.json", import.meta.url).href;
-
-// Theme files are owned, adopted and removed by PI WEB.
-function themeStyles(id) {
-  return [
-    { id: "palette", url: new URL(`./styles/${id}.css`, import.meta.url).href, order: 1000 },
-    { id: "structure", url: new URL("./styles/pendant.css", import.meta.url).href, order: 1010 },
-  ];
-}
 
 // --- Command logos ----------------------------------------------------------
 // When a Pendant theme is active, decorate bash tool cards with a brand logo.
@@ -352,77 +344,9 @@ export default {
     return {
       start: startLogos,
       dispose: disposeLogos,
-      contributions: {
-        themes: [
-          {
-            id: "dark",
-            name: "Pendant Dark",
-            description: "8-bit Pendant look: pixel fonts, sharp boxes, flat dark surfaces.",
-            order: 40,
-            colorScheme: "dark",
-            stylesheets: themeStyles("dark"),
-          },
-          // Experiment series --------------------------------------------------
-          {
-            id: "amber",
-            name: "Amber CRT",
-            description: "Pitch black bg, warm amber glow — like an old monochrome terminal.",
-            order: 44,
-            colorScheme: "dark",
-            stylesheets: themeStyles("amber"),
-          },
-          {
-            id: "green",
-            name: "Green Phosphor",
-            description: "Deep black bg, classic matrix green — retro green-screen.",
-            order: 45,
-            colorScheme: "dark",
-            stylesheets: themeStyles("green"),
-          },
-          {
-            id: "cyan",
-            name: "Cyan/Teal",
-            description: "Near-black bg, cool cyan accents — modern-retro hybrid.",
-            order: 46,
-            colorScheme: "dark",
-            stylesheets: themeStyles("cyan"),
-          },
-          {
-            id: "mono",
-            name: "Nearly Monochrome",
-            description: "Pure grayscale — every accent is just a different shade of gray.",
-            order: 47,
-            colorScheme: "dark",
-            stylesheets: themeStyles("mono"),
-          },
-          {
-            id: "muted",
-            name: "Muted Everything",
-            description: "Desaturated hints, barely-there color — 5–10% saturation.",
-            order: 48,
-            colorScheme: "dark",
-            stylesheets: themeStyles("muted"),
-          },
-          {
-            id: "light",
-            name: "Pendant Light",
-            description: "8-bit Pendant look: pixel fonts, sharp boxes, flat light surfaces.",
-            order: 50,
-            colorScheme: "light",
-            stylesheets: themeStyles("light"),
-          },
-        ],
-        themePairs: [
-          {
-            id: "auto",
-            name: "Pendant",
-            description: "Follow the system light/dark preference with Pendant themes.",
-            order: 20,
-            light: "light",
-            dark: "dark",
-          },
-        ],
-      },
+      // No runtime theme registrations: static discovery also works before
+      // this optional command-logo adapter is activated.
+      contributions: {},
     };
   },
 };

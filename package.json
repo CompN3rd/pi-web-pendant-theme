@@ -1,6 +1,6 @@
 {
   "name": "@compn3rd/pi-web-pendant-theme",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Pendant-inspired theme for PI WEB: Source Sans 3 body font, Press Start 2P pixel accents, sharp corners, flat surfaces, subtle pixel grid. Includes 6 dark variants (Amber CRT, Green Phosphor, Cyan/Teal, Nearly Monochrome, Muted Everything, plus the original) and a light variant.",
   "license": "MIT",
   "type": "module",
@@ -39,7 +39,17 @@
       {
         "id": "pendant",
         "browserRoot": ".",
-        "module": "pi-web-plugin.js"
+        "module": "pi-web-plugin.js",
+        "themes": [
+          { "id": "dark", "name": "Pendant Dark", "description": "8-bit Pendant look: pixel fonts, sharp boxes, flat dark surfaces.", "order": 40, "colorScheme": "dark", "stylesheets": [{ "id": "palette", "path": "styles/dark.css", "order": 1000 }, { "id": "structure", "path": "styles/pendant.css", "order": 1010 }] },
+          { "id": "amber", "name": "Amber CRT", "description": "Pitch black bg, warm amber glow — like an old monochrome terminal.", "order": 44, "colorScheme": "dark", "stylesheets": [{ "id": "palette", "path": "styles/amber.css", "order": 1000 }, { "id": "structure", "path": "styles/pendant.css", "order": 1010 }] },
+          { "id": "green", "name": "Green Phosphor", "description": "Deep black bg, classic matrix green — retro green-screen.", "order": 45, "colorScheme": "dark", "stylesheets": [{ "id": "palette", "path": "styles/green.css", "order": 1000 }, { "id": "structure", "path": "styles/pendant.css", "order": 1010 }] },
+          { "id": "cyan", "name": "Cyan/Teal", "description": "Near-black bg, cool cyan accents — modern-retro hybrid.", "order": 46, "colorScheme": "dark", "stylesheets": [{ "id": "palette", "path": "styles/cyan.css", "order": 1000 }, { "id": "structure", "path": "styles/pendant.css", "order": 1010 }] },
+          { "id": "mono", "name": "Nearly Monochrome", "description": "Pure grayscale — every accent is just a different shade of gray.", "order": 47, "colorScheme": "dark", "stylesheets": [{ "id": "palette", "path": "styles/mono.css", "order": 1000 }, { "id": "structure", "path": "styles/pendant.css", "order": 1010 }] },
+          { "id": "muted", "name": "Muted Everything", "description": "Desaturated hints, barely-there color — 5–10% saturation.", "order": 48, "colorScheme": "dark", "stylesheets": [{ "id": "palette", "path": "styles/muted.css", "order": 1000 }, { "id": "structure", "path": "styles/pendant.css", "order": 1010 }] },
+          { "id": "light", "name": "Pendant Light", "description": "8-bit Pendant look: pixel fonts, sharp boxes, flat light surfaces.", "order": 50, "colorScheme": "light", "stylesheets": [{ "id": "palette", "path": "styles/light.css", "order": 1000 }, { "id": "structure", "path": "styles/pendant.css", "order": 1010 }] }
+        ],
+        "themePairs": [{ "id": "auto", "name": "Pendant", "description": "Follow the system light/dark preference with Pendant themes.", "order": 20, "light": "light", "dark": "dark" }]
       }
     ]
   },

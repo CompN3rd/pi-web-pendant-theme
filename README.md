@@ -2,12 +2,14 @@
 
 A [Pendant](https://pendant.run/)-inspired theme pack for [PI WEB](https://pi-web.dev/) with retro 8-bit aesthetics: sharp corners, flat surfaces, a subtle pixel grid, Source Sans 3 body font, and Press Start 2P pixel accents on section headers.
 
-Version 0.5.0 targets PI WEB browser API v5 **with CSS stylesheet
-contributions and `stylesheet-integration` v1**. API v5 alone is not sufficient:
-early v5 hosts did not include CSS-first themes. Verified against upstream
-`4c31ebc8` (1.202610.6). Use published version 0.4.0 for older v4 hosts.
-Current upstream still accepts v4 plugins with a deprecation diagnostic.
-See [visual review](./review/README.md) for verification and captures.
+Version 0.6.0 requires **PI WEB >=1.202610.9** for declarative themes and
+supported styling hooks. Themes are discovered without running JavaScript,
+so the configured default palette can load with the initial page. All saved
+`pendant:*` theme and Auto pair IDs are preserved. Browser API v5 is used only
+for command logos. Use 0.5.0 for earlier CSS-first v5 hosts or 0.4.0 for v4 hosts.
+See [compatibility checks and limits](./docs/compatibility.md) for 1.202610.9
+verification, and [visual review](./review/README.md) for the browser harness
+and earlier captures.
 
 ## Command logos
 
@@ -150,6 +152,12 @@ for prerequisites and the remaining coverage boundaries.
 ```bash
 node scripts/build-manifest.js
 ```
+
+## Publishing
+
+See [publishing setup and release steps](./docs/publishing.md). GitHub Actions
+checks stable version tags and publishes the verified tarball with npm trusted
+publishing (OIDC) and provenance, without stored npm tokens.
 
 ## Community discovery
 

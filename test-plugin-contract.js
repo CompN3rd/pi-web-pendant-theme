@@ -5,6 +5,7 @@
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import { posix } from 'node:path';
+import browserPlugin from './pi-web-plugin.js';
 
 const packageJson = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
 const source = readFileSync(new URL('./pi-web-plugin.js', import.meta.url), 'utf8');
@@ -55,8 +56,21 @@ assert.doesNotMatch(source, /Element\.prototype|ShadowRoot\.prototype|new CSSSty
 assert.doesNotMatch(source, /tokens:/, 'v5 themes must not declare v4 token objects');
 assert.match(source, /dispose: disposeLogos/, 'logo lifecycle must have cleanup');
 assert.match(source, /id: "stylesheet-integration"/, 'older v5 hosts must fail explicitly');
-for (const id of ['dark','light','amber','green','cyan','mono','muted']) {
-  assert.ok(source.includes(`stylesheets: themeStyles("${id}")`));
+const themeIds = ['dark','amber','green','cyan','mono','muted','light'];
+assert.deepEqual(plugin.themes.map(theme => theme.id), themeIds, 'preserve saved theme IDs');
+assert.deepEqual(plugin.themePairs, [{ id: 'auto', name: 'Pendant', description: 'Follow the system light/dark preference with Pendant themes.', order: 20, light: 'light', dark: 'dark' }]);
+assert.deepEqual(browserPlugin.activate().contributions, {}, 'do not register deprecated runtime themes twice');
+for (const id of themeIds) {
+  const theme = plugin.themes.find(theme => theme.id === id);
+  assert.equal(theme.colorScheme, id === 'light' ? 'light' : 'dark');
+  assert.deepEqual(theme.stylesheets, [
+    { id: 'palette', path: `styles/${id}.css`, order: 1000 },
+    { id: 'structure', path: 'styles/pendant.css', order: 1010 },
+  ]);
+  for (const sheet of theme.stylesheets) {
+    assert.equal(posix.normalize(sheet.path), sheet.path);
+    assert.ok(existsSync(new URL(`./${sheet.path}`, import.meta.url)));
+  }
   const palette = readFileSync(new URL(`./styles/${id}.css`, import.meta.url), 'utf8');
   assert.match(palette, /:root\s*\{/);
   assert.match(palette, /--pi-bg:/);
@@ -67,4 +81,8 @@ assert.match(
   'manifest URL must be module-relative for nested and federated deployments',
 );
 
-console.log('PI WEB browser plugin v5 package contract passed');
+assert.doesNotMatch(css, /\.action-row|\.action-main|\.conversation-body/, 'use supported navigation and message hooks');
+assert.match(css, /\.ui-nav-row\[data-current="true"\]/, 'navigation must distinguish current from bulk selected');
+assert.match(css, /\.chat-message-body/);
+assert.match(css, /\[data-ui-context="composer"\]/);
+console.log('PI WEB static themes and browser plugin v5 package contract passed');
