@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.6.1 — 2026-11-08
+
+- Match the loading screen to each palette on PI WEB 1.202611.1 and newer,
+  including Auto light/dark switching. Development deployments keep PI WEB's
+  purple loading mark. The minimum supported PI WEB version is unchanged.
+- Place the selected navigation-row accent on the leading edge in RTL layouts.
+- Verify all palettes, theme switching, responsive layouts, fonts, focus,
+  terminal input, and command-logo cleanup against PI WEB 1.202611.1 in Chromium.
+  Extend the isolated browser harness to check startup colours and RTL accents.
+
 ## 0.6.0 — 2026-11-01
 
 - Require PI WEB >=1.202610.9. Move all seven themes and the Auto pair to

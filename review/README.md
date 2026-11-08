@@ -43,9 +43,11 @@ start/dispose lifecycle. CSS selectors remain experimental host internals.
 
 ## Reproduce
 
-1. Build PI WEB with CSS-first themes / `stylesheet-integration` v1.
+1. Use a built PI WEB checkout or installed package with CSS-first themes /
+   `stylesheet-integration` v1. The current driver also expects the host-access
+   and loading-screen contracts from PI WEB 1.202611.1.
 2. `npm ci` in this repository.
-3. Set `PI_WEB_SOURCE` to that built checkout (default:
+3. Set `PI_WEB_SOURCE` to that built checkout or installed package (default:
    `../worktrees/pendant-v5-preview`).
 4. Install Edge, or set `CHROME_BIN` to a Chromium executable.
 5. `npm run test:visual -- refinement --profile refinement`. Both output directory
@@ -61,6 +63,16 @@ start/dispose lifecycle. CSS selectors remain experimental host internals.
 The test driver uses private host methods only for deterministic theme/settings
 selection. The shipped theme does not call those methods. Host refactors may
 require updates to this driver and the private command-logo DOM adapter.
+
+## Current release
+
+`release-0.6.1/` records the installed PI WEB 1.202611.1 package with Chromium
+156.0.8078.4. All browser checks passed without recorded errors, including
+server-delivered Auto startup colours with JavaScript disabled and leading-edge
+navigation accents in LTR/RTL. Its development deployment keeps the purple
+loading mark. See `results.json` for `hostVersion`; `host` is null when testing
+an installation without Git metadata. See [compatibility limits](../docs/compatibility.md)
+for the exact scope. The older comparison gallery below is unchanged.
 
 ## Verification results
 

@@ -1,0 +1,31 @@
+{
+  "profile": "refinement",
+  "browser": "156.0.8078.4",
+  "pluginHash": "5023e27d48ed4863088f32ec98df51fe05dac89ffd6f664591ec1fd93d8bcae7",
+  "hostVersion": "1.202611.1",
+  "host": null,
+  "checks": [
+    "Server-delivered Auto loading colours match dark/light palettes before JavaScript; development logo override respected",
+    "Real host loaded Pendant v5 and the seeded session",
+    "attachShadow prototype untouched",
+    "adoptedStyleSheets prototype untouched",
+    "Three real tool cards decorated with fixed 15px logos",
+    "Refinement: loaded semantic prose font/size and visible status glyphs verified",
+    "Current navigation-row accent follows LTR/RTL inline start",
+    "Palette light: stylesheet loaded, logos retained",
+    "Palette amber: stylesheet loaded, logos retained",
+    "Palette green: stylesheet loaded, logos retained",
+    "Palette cyan: stylesheet loaded, logos retained",
+    "Palette mono: stylesheet loaded, logos retained",
+    "Palette muted: stylesheet loaded, logos retained",
+    "Palette dark: stylesheet loaded, logos retained",
+    "Switch to stock removes all logo decorations and semantic font overrides",
+    "Auto pair follows light/dark media preference",
+    "Keyboard focus outline remains visible",
+    "Real terminal mounted and accepted a harmless echo command",
+    "tablet: no document horizontal overflow",
+    "mobile: no document horizontal overflow",
+    "Logo adapter: command mutation, recycled non-bash card, unknown command, late shadow root, disconnect/reconnect, stock/mono switching, disposal"
+  ],
+  "errors": []
+}

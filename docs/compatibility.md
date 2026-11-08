@@ -1,4 +1,53 @@
-# PI WEB 1.202610.9 compatibility check
+# PI WEB compatibility
+
+## Pendant 0.6.1 / PI WEB 1.202611.1
+
+Assessed PI WEB source at `98316bd8` (package version 1.202611.1), including
+recent release notes, public API v5, static theme metadata, styling contracts,
+configuration precedence, and transcript renderers. No rewrite or required API
+migration was identified. Pendant retains its PI WEB >=1.202610.9 minimum.
+
+This patch adds optional loading-screen colours for newer hosts and makes the
+current navigation-row accent follow the leading edge in RTL layouts. Saved
+theme IDs, the Auto pair, and the private command-logo adapter are unchanged.
+
+### Verification
+
+The isolated real-browser harness passed against the **installed 1.202611.1
+package**, not a build of the source checkout, using Chromium 156.0.8078.4.
+See [`review/release-0.6.1/results.json`](../review/release-0.6.1/results.json)
+and adjacent screenshots. `hostVersion` records the installed version;
+`host: null` means that installation has no Git checkout revision.
+
+Checks cover all seven palettes, Auto switching, stock-theme restoration,
+loaded prose fonts, status glyphs, 15px logos, keyboard focus, terminal echo,
+tablet/mobile overflow, and synthetic logo lifecycle transitions. Additional
+browser checks verify the real current-row accent in both writing directions
+and server-delivered dark/light startup colours with JavaScript disabled.
+The fixture is detected as a development deployment: its computed logo stays
+purple, while the delivered CSS contains each contributed logo colour.
+Desktop RTL, mobile chat, and startup captures were inspected.
+
+`npm test`, parser synchronization, and packed-package checks are also release
+gates. No services or existing sessions are restarted by this harness.
+
+### Remaining limits
+
+The tool-title decoration still uses private DOM selectors and periodic root
+discovery; other private layout selectors remain experimental. The new public
+transcript renderer API is not a direct title-decoration replacement, so it
+is not adopted solely for this update. No runtime dependency or peer range
+needs changing, and the plugin has no server/session backend to migrate.
+Module-relative logo assets and stylesheet-relative fonts remain compatible
+with app-relative URL rules.
+
+These checks do not establish Firefox/WebKit, real RTL translation packs,
+forced-colour accessibility, nested-proxy or federated-machine runtime behavior,
+live model streaming, or every third-party renderer. The stable deployment's
+computed startup logo colour was not exercised separately from the delivered
+CSS and development override.
+
+## Pendant 0.6.0 / PI WEB 1.202610.9
 
 Latest stable upstream release checked: [v1.202610.9](https://github.com/jmfederico/pi-web/releases/tag/v1.202610.9),
 commit `83bcf5637ac7801fb3b1f54653f205cb474475f1` (also npm's latest version at the time of checking).

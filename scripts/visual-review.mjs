@@ -1,5 +1,5 @@
 // Real PI WEB integration capture. No model calls; all sessions are synthetic.
-// PI_WEB_SOURCE must point to a built checkout with stylesheet-integration v1.
+// PI_WEB_SOURCE must point to a built checkout or installed PI WEB package.
 import { chromium } from '@playwright/test';
 import { spawn, execFileSync } from 'node:child_process';
 import { mkdtemp, mkdir, writeFile, cp, readFile } from 'node:fs/promises';
@@ -30,7 +30,7 @@ const port = async () => new Promise(resolve => { const s = createServer(); s.li
 const json = async (path, data) => writeFile(path, JSON.stringify(data, null, 2));
 const wait = ms => new Promise(r => setTimeout(r, ms));
 async function ready(url) {
-  for(let i=0;i<120;i++) { try { if ((await fetch(url)).ok) return; } catch {} await wait(250); }
+  for(let i=0;i<480;i++) { try { if ((await fetch(url)).ok) return; } catch {} await wait(250); }
   throw new Error(`Not ready: ${url}; logs: ${temp}`);
 }
 function start(name, entry, env) {
@@ -81,7 +81,7 @@ try {
   await mkdir(pluginDir);
   for(const path of ['package.json','pi-web-plugin.js','styles','fonts','logos']) await cp(join(pluginSource,path), join(pluginDir,path), {recursive:true});
   await json(join(temp,'data','projects.json'), {projects:[{id:projectId,name:'Pendant preview',path:demo,createdAt:'2026-06-01T10:00:00Z'}]});
-  await json(join(temp,'config.json'), {host:'127.0.0.1',allowedHosts:true,plugins:{pendant:{enabled:true}}});
+  await json(join(temp,'config.json'), {host:'127.0.0.1',hostAccess:{mode:'restricted',hosts:[]},defaultTheme:{themeId:'pendant:dark',auto:true},plugins:{pendant:{enabled:true}}});
   const api = await port(), daemon = await port();
   // Drop all inherited PI WEB routing/ownership variables before constructing
   // this independent instance. Never touch the session that runs this script.
@@ -100,6 +100,25 @@ try {
     await wait(250);
   }
   browser = await chromium.launch(process.env.CHROME_BIN ? {executablePath:process.env.CHROME_BIN} : {channel:'msedge'});
+  const startupContext = await browser.newContext({javaScriptEnabled:false, colorScheme:'dark'});
+  const startupPage = await startupContext.newPage();
+  try {
+    for (const [scheme, background, foreground, logo] of [
+      ['dark', '#111111', '#f5f5f5', '#4f8cff'], ['light', '#fafafa', '#161616', '#145fd7'],
+    ]) {
+      await startupPage.emulateMedia({colorScheme:scheme});
+      await startupPage.goto(`http://127.0.0.1:${api}/`);
+      const colours = await startupPage.locator('#pi-web-startup').evaluate(node => {
+        const style = getComputedStyle(node);
+        return ['background', 'foreground', 'logo'].map(key => style.getPropertyValue(`--pi-startup-${key}`).trim());
+      });
+      const development = await startupPage.locator('html').getAttribute('data-pi-web-deployment') === 'dev';
+      assert.deepEqual(colours, [background, foreground, development ? '#a371f7' : logo]);
+      assert((await startupPage.locator('#pi-web-startup-theme').textContent()).includes(`--pi-startup-logo:${logo}`));
+      await startupPage.screenshot({path:join(output, `startup-${scheme}.png`)});
+    }
+    checks.push('Server-delivered Auto loading colours match dark/light palettes before JavaScript; development logo override respected');
+  } finally { await startupContext.close(); }
   const context = await browser.newContext({viewport:{width:1440,height:1000},deviceScaleFactor:1});
   page = await context.newPage();
   observeBrowserErrors(page, errors);
@@ -148,6 +167,18 @@ try {
     assert(await page.evaluate(()=>document.fonts.check('16px "Pendant Source Sans 3"')));
     checks.push('Refinement: loaded semantic prose font/size and visible status glyphs verified');
   }
+  // Exercise the real navigation hooks in both writing directions.
+  for (const [direction, offset] of [['ltr', '3px'], ['rtl', '-3px']]) {
+    await page.evaluate(direction => { document.documentElement.dir = direction; }, direction);
+    const rows = page.locator('project-list .ui-nav-row[data-current="true"], workspace-list .ui-nav-row[data-current="true"], session-list .ui-nav-row[data-current="true"]');
+    assert(await rows.count() > 0);
+    for (const shadow of await rows.evaluateAll(nodes => nodes.map(node => getComputedStyle(node).boxShadow))) {
+      assert(shadow.includes(`${offset} 0px 0px`), `${direction}: unexpected selected-row edge ${shadow}`);
+    }
+    await shot(`navigation-${direction}`);
+  }
+  await page.evaluate(() => { document.documentElement.removeAttribute('dir'); });
+  checks.push('Current navigation-row accent follows LTR/RTL inline start');
   await scrollChat(false);
   await shot('desktop-tools');
   // Since 1.202610.9 startup only loads the selected theme and its pair.
@@ -217,7 +248,7 @@ try {
   assert(moduleUrl, 'Pendant browser module must have loaded');
   checks.push(...await checkLogoLifecycle(page.context(), moduleUrl));
   console.log('Capture ready:',output,'logs:',temp);
-  await json(join(output,'results.json'),{profile,browser:browser.version(),pluginHash:createHash('sha256').update(await readFile(join(pluginSource,'pi-web-plugin.js'))).update(await readFile(join(pluginSource,'styles','pendant.css'))).digest('hex'),host:execFileSync('git',['-C',host,'rev-parse','HEAD'],{encoding:'utf8'}).trim(),checks,errors});
+  await json(join(output,'results.json'),{profile,browser:browser.version(),pluginHash:createHash('sha256').update(await readFile(join(pluginSource,'pi-web-plugin.js'))).update(await readFile(join(pluginSource,'styles','pendant.css'))).digest('hex'),hostVersion:JSON.parse(await readFile(join(host,'package.json'),'utf8')).version,host: (() => { try { return execFileSync('git',['-C',host,'rev-parse','HEAD'],{encoding:'utf8',stdio:['ignore','pipe','ignore']}).trim(); } catch { return null; } })(),checks,errors});
   if(errors.length) throw new Error(`Browser errors: ${errors.join('\n')}`);
 } catch (error) {
   await page?.screenshot({path:join(output,'failure.png')}).catch(()=>{});

@@ -80,9 +80,12 @@ pi-web-app {
 :host(project-list) .ui-nav-row[data-current="true"],
 :host(workspace-list) .ui-nav-row[data-current="true"],
 :host(session-list) .ui-nav-row[data-current="true"] {
-  box-shadow: inset 3px 0 0 var(--pi-accent);
+  box-shadow: inset var(--pendant-current-edge, 3px) 0 0 var(--pi-accent);
   background: color-mix(in srgb, var(--pi-accent) 9%, var(--pi-bg));
 }
+:host(project-list:dir(rtl)),
+:host(workspace-list:dir(rtl)),
+:host(session-list:dir(rtl)) { --pendant-current-edge: -3px; }
 :host(project-list) .ui-nav-row-main,
 :host(workspace-list) .ui-nav-row-main,
 :host(session-list) .ui-nav-row-main { padding-block: 9px; }

@@ -2,13 +2,13 @@
 
 A [Pendant](https://pendant.run/)-inspired theme pack for [PI WEB](https://pi-web.dev/) with retro 8-bit aesthetics: sharp corners, flat surfaces, a subtle pixel grid, Source Sans 3 body font, and Press Start 2P pixel accents on section headers.
 
-Version 0.6.0 requires **PI WEB >=1.202610.9** for declarative themes and
+Version 0.6.x requires **PI WEB >=1.202610.9** for declarative themes and
 supported styling hooks. Themes are discovered without running JavaScript,
 so the configured default palette can load with the initial page. All saved
 `pendant:*` theme and Auto pair IDs are preserved. Browser API v5 is used only
 for command logos. Use 0.5.0 for earlier CSS-first v5 hosts or 0.4.0 for v4 hosts.
-See [compatibility checks and limits](./docs/compatibility.md) for 1.202610.9
-verification, and [visual review](./review/README.md) for the browser harness
+See [compatibility checks and limits](./docs/compatibility.md) for 1.202611.1
+and earlier verification, and [visual review](./review/README.md) for the browser harness
 and earlier captures.
 
 ## Command logos
